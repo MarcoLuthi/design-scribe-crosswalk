@@ -259,10 +259,11 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
     primaryText = data?.lastname || '';
   } else if (data) {
     // Try to find the attribute in the data object
-    primaryText = data[primaryAttr.toLowerCase() as keyof typeof data] || '';
-    // Handle nested properties by checking if it's a string
-    if (typeof primaryText !== 'string') {
-      primaryText = '';
+    const potentialValue = data[primaryAttr.toLowerCase() as keyof typeof data];
+    
+    // Only use the value if it's a string
+    if (typeof potentialValue === 'string') {
+      primaryText = potentialValue;
     }
   }
   
@@ -274,10 +275,11 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
       secondaryText = data?.lastname || '';
     } else if (data) {
       // Try to find the attribute in the data object
-      secondaryText = data[secondaryAttr.toLowerCase() as keyof typeof data] || '';
-      // Handle nested properties by checking if it's a string
-      if (typeof secondaryText !== 'string') {
-        secondaryText = '';
+      const potentialValue = data[secondaryAttr.toLowerCase() as keyof typeof data];
+      
+      // Only use the value if it's a string
+      if (typeof potentialValue === 'string') {
+        secondaryText = potentialValue;
       }
     }
   }
