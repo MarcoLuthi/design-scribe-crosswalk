@@ -31,28 +31,26 @@ const ProcivisOneCard = ({
     <div className="w-full max-w-md shadow-lg rounded-2xl overflow-hidden bg-slate-50">
       {/* Header section with logo/avatar and title */}
       <div className="p-4 flex items-center gap-4">
-        <Avatar 
-          className="w-16 h-16 rounded-md"
+        <div 
+          className="w-16 h-16 rounded-md flex items-center justify-center"
           style={{ backgroundColor: logoBackgroundColor }}
         >
           {logo ? (
-            <AvatarImage 
+            <img 
               src={logo} 
               alt={`${title} logo`}
-              className="p-2"
+              className="w-full h-full p-2 object-contain"
             />
           ) : (
-            <AvatarFallback 
-              className="text-xl font-bold rounded-md"
-              style={{ 
-                color: logoFontColor,
-                backgroundColor: logoBackgroundColor 
-              }}
+            <span 
+              className="text-2xl font-bold"
+              style={{ color: logoFontColor }}
             >
               {firstLetter}
-            </AvatarFallback>
+            </span>
           )}
-        </Avatar>
+        </div>
+        
         <div>
           <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
           <div className="flex items-center gap-2 text-gray-600">
