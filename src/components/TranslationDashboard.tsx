@@ -12,6 +12,8 @@ import { ProcivisOneSchema } from "@/types/procivis-one-spec";
 import { convertOCAToProcivisOne, convertProcivisOneToOCA, formatProcivisOnePreview } from "@/utils/format-converter";
 import { Button } from "@/components/ui/button";
 import ProcivisOneCard from "./ProcivisOneCard";
+import { ArrowLeftRight, RefreshCw } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type FormatType = "OCA" | "ProcivisOne";
 
@@ -20,6 +22,7 @@ const TranslationDashboard = () => {
   const [data, setData] = useState<OwnerData>(defaultData);
   const [formatType, setFormatType] = useState<FormatType>("OCA");
   const [procivisSpec, setProcivisSpec] = useState<ProcivisOneSchema>(defaultProcivisOneSchema);
+  const [showBothPreviews, setShowBothPreviews] = useState(false);
   
   // Extract branding and meta information for OCA format
   const brandingOverlay = getBrandingOverlay(specification);
@@ -48,26 +51,40 @@ const TranslationDashboard = () => {
     } else {
       const typedSpec = newSpec as ProcivisOneSchema;
       setProcivisSpec(typedSpec);
+      // Convert the Procivis spec to OCA format
+      setSpecification(convertProcivisOneToOCA(typedSpec));
     }
+  };
+  
+  const handleConvertToOCA = () => {
+    setSpecification(convertProcivisOneToOCA(procivisSpec));
+    setFormatType("OCA");
+  };
+  
+  const handleConvertToProcivisOne = () => {
+    setProcivisSpec(convertOCAToProcivisOne(specification));
+    setFormatType("ProcivisOne");
   };
   
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-4">Design Translation Tool</h1>
       
-      <div className="mb-6 flex gap-4">
-        <Button 
-          variant={formatType === "OCA" ? "default" : "outline"} 
-          onClick={() => handleFormatToggle("OCA")}
-        >
-          OCA Format
-        </Button>
-        <Button 
-          variant={formatType === "ProcivisOne" ? "default" : "outline"} 
-          onClick={() => handleFormatToggle("ProcivisOne")}
-        >
-          Procivis One Format
-        </Button>
+      <div className="mb-6 flex justify-between items-center">
+        <ToggleGroup type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
+          <ToggleGroupItem value="OCA">OCA Format</ToggleGroupItem>
+          <ToggleGroupItem value="ProcivisOne">Procivis One Format</ToggleGroupItem>
+        </ToggleGroup>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => setShowBothPreviews(!showBothPreviews)}
+          >
+            {showBothPreviews ? "Single Preview" : "Show Both Previews"}
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -115,33 +132,112 @@ const TranslationDashboard = () => {
         
         {/* Right side: Visualization */}
         <div className="flex flex-col space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preview</CardTitle>
-              <CardDescription>
-                Visualization of the design based on the specification and data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center p-6">
-              {formatType === "OCA" ? (
-                <PetPermit
-                  title={metaOverlay?.name || "SWIYU"}
-                  primaryField={primaryField}
-                  backgroundColor={brandingOverlay?.primary_background_color || "#2C75E3"}
-                  logo={brandingOverlay?.logo}
-                  data={data}
-                />
-              ) : (
-                <ProcivisOneCard
-                  title={procivisPreview.title}
-                  primaryText={procivisPreview.primaryText}
-                  secondaryText={procivisPreview.secondaryText}
-                  backgroundColor={procivisPreview.backgroundColor}
-                  logo={procivisPreview.logo}
-                />
-              )}
-            </CardContent>
-          </Card>
+          {showBothPreviews ? (
+            <>
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>OCA Preview</CardTitle>
+                      <CardDescription>
+                        Visualization of the OCA format
+                      </CardDescription>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleConvertToProcivisOne}
+                      title="Convert to Procivis One"
+                    >
+                      <ArrowLeftRight className="h-4 w-4 mr-2" />
+                      To Procivis One
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex justify-center p-6">
+                  <PetPermit
+                    title={metaOverlay?.name || "SWIYU"}
+                    primaryField={primaryField}
+                    backgroundColor={brandingOverlay?.primary_background_color || "#2C75E3"}
+                    logo={brandingOverlay?.logo}
+                    data={data}
+                  />
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Procivis One Preview</CardTitle>
+                      <CardDescription>
+                        Visualization of the Procivis One format
+                      </CardDescription>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleConvertToOCA}
+                      title="Convert to OCA"
+                    >
+                      <ArrowLeftRight className="h-4 w-4 mr-2" />
+                      To OCA
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex justify-center p-6">
+                  <ProcivisOneCard
+                    title={procivisPreview.title}
+                    primaryText={procivisPreview.primaryText}
+                    secondaryText={procivisPreview.secondaryText}
+                    backgroundColor={procivisPreview.backgroundColor}
+                    logo={procivisPreview.logo}
+                  />
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Preview</CardTitle>
+                    <CardDescription>
+                      Visualization of the design based on the specification and data
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={formatType === "OCA" ? handleConvertToProcivisOne : handleConvertToOCA}
+                    title={formatType === "OCA" ? "Convert to Procivis One" : "Convert to OCA"}
+                  >
+                    <ArrowLeftRight className="h-4 w-4 mr-2" />
+                    {formatType === "OCA" ? "To Procivis One" : "To OCA"}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="flex justify-center p-6">
+                {formatType === "OCA" ? (
+                  <PetPermit
+                    title={metaOverlay?.name || "SWIYU"}
+                    primaryField={primaryField}
+                    backgroundColor={brandingOverlay?.primary_background_color || "#2C75E3"}
+                    logo={brandingOverlay?.logo}
+                    data={data}
+                  />
+                ) : (
+                  <ProcivisOneCard
+                    title={procivisPreview.title}
+                    primaryText={procivisPreview.primaryText}
+                    secondaryText={procivisPreview.secondaryText}
+                    backgroundColor={procivisPreview.backgroundColor}
+                    logo={procivisPreview.logo}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
