@@ -148,6 +148,14 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
     primaryFieldTemplate = `{{${primaryAttr}}}${secondaryAttr ? ` {{${secondaryAttr}}}` : ""} from {{address_country}}`;
   }
   
+  // Use background color from schema or default
+  let backgroundColor = schema.layoutProperties.background?.color || "#2C75E3";
+  
+  // If no color but has background image, we'll use a placeholder that will be replaced with calculated average
+  if ((!backgroundColor || backgroundColor === "") && schema.layoutProperties.background?.image) {
+    backgroundColor = "#2C75E3"; // Default fallback
+  }
+  
   // Create the OCA specification
   const specification: DesignSpecification = {
     capture_bases: [ownerCaptureBase, petCaptureBase],
@@ -183,7 +191,7 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
         language: "en",
         theme: "light",
         logo: schema.layoutProperties.logo.image,
-        primary_background_color: schema.layoutProperties.background.color,
+        primary_background_color: backgroundColor,
         primary_field: primaryFieldTemplate
       },
       // Meta overlay
@@ -273,7 +281,7 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
     title: schema.name || 'Untitled',
     primaryText,
     secondaryText,
-    backgroundColor: schema.layoutProperties.background?.color || '#2C75E3',
+    backgroundColor: schema.layoutProperties.background?.color || '', // Empty string to trigger average color calculation
     backgroundImage,
     logo: schema.layoutProperties.logo?.image || '',
     logoFontColor,

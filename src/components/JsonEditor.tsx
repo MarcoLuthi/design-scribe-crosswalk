@@ -7,9 +7,18 @@ import { toast } from "sonner";
 interface JsonEditorProps {
   initialJson: object;
   onJsonUpdate: (json: object) => void;
+  height?: string;
+  label?: string;
+  description?: string;
 }
 
-const JsonEditor = ({ initialJson, onJsonUpdate }: JsonEditorProps) => {
+const JsonEditor = ({ 
+  initialJson, 
+  onJsonUpdate, 
+  height = "h-80", 
+  label,
+  description
+}: JsonEditorProps) => {
   const [jsonText, setJsonText] = useState(JSON.stringify(initialJson, null, 2));
   
   // Update jsonText when initialJson changes
@@ -29,8 +38,14 @@ const JsonEditor = ({ initialJson, onJsonUpdate }: JsonEditorProps) => {
   
   return (
     <div className="space-y-4">
+      {label && (
+        <div className="mb-2">
+          <h3 className="text-base font-medium">{label}</h3>
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        </div>
+      )}
       <Textarea
-        className="font-mono h-80 text-sm"
+        className={`font-mono ${height} text-sm`}
         value={jsonText}
         onChange={(e) => setJsonText(e.target.value)}
       />

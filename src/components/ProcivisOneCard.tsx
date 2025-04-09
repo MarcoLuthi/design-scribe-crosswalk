@@ -1,5 +1,6 @@
 
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { useEffect, useState } from "react";
 
 interface ProcivisOneCardProps {
   title: string;
@@ -24,6 +25,57 @@ const ProcivisOneCard = ({
 }: ProcivisOneCardProps) => {
   // Get the first letter of the title for the fallback avatar display
   const firstLetter = title && title.length > 0 ? title.charAt(0).toUpperCase() : "C";
+  const [averageColor, setAverageColor] = useState<string | null>(null);
+
+  // Calculate average color from background image if it exists and no backgroundColor is provided
+  useEffect(() => {
+    if (backgroundImage && (!backgroundColor || backgroundColor === "")) {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) return;
+
+        // Scale down image for faster processing
+        const maxSize = 50;
+        const width = Math.min(img.width, maxSize);
+        const height = Math.min(img.height, maxSize);
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw image to canvas
+        context.drawImage(img, 0, 0, width, height);
+        
+        // Get image data
+        const imageData = context.getImageData(0, 0, width, height);
+        const data = imageData.data;
+        
+        // Calculate average RGB
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i];
+          g += data[i + 1];
+          b += data[i + 2];
+          count++;
+        }
+        
+        // Average RGB values
+        if (count > 0) {
+          r = Math.floor(r / count);
+          g = Math.floor(g / count);
+          b = Math.floor(b / count);
+          setAverageColor(`rgb(${r}, ${g}, ${b})`);
+        }
+      };
+      
+      img.src = backgroundImage;
+    }
+  }, [backgroundImage, backgroundColor]);
+
+  // Use average color as fallback if available and no backgroundColor is provided
+  const effectiveBackgroundColor = backgroundColor || averageColor || "#2C75E3";
+  const effectiveLogoBackgroundColor = logoBackgroundColor || effectiveBackgroundColor;
 
   return (
     <div className="w-full max-w-xl shadow-lg rounded-2xl overflow-hidden bg-slate-50">
@@ -31,7 +83,7 @@ const ProcivisOneCard = ({
       <div className="p-4 flex items-center gap-4">
         <div 
           className="w-14 h-14 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: logoBackgroundColor }}
+          style={{ backgroundColor: effectiveLogoBackgroundColor }}
         >
           {logo ? (
             <img 
@@ -70,7 +122,7 @@ const ProcivisOneCard = ({
           style={
             backgroundImage 
               ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-              : { backgroundColor }
+              : { backgroundColor: effectiveBackgroundColor }
           }
         >
           {/* Card content would go here */}
