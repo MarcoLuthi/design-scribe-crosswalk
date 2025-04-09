@@ -57,16 +57,8 @@ export function getAttributeLabel(specification: DesignSpecification, baseId: st
 export function formatPrimaryField(template: string, data: OwnerData): string {
   if (!template) return "";
   
-  // First process any nested properties with specific pattern for address fields
-  let processedTemplate = template.replace(/{{address_(\w+)}}/g, (match, prop) => {
-    if (data.address && data.address[prop as keyof typeof data.address]) {
-      return data.address[prop as keyof typeof data.address];
-    }
-    return match; // Return unmodified if not found
-  });
-  
-  // Then process nested properties with dot notation
-  processedTemplate = processedTemplate.replace(/{{(\w+)\.(\w+)}}/g, (match, obj, prop) => {
+  // First process any nested properties like address.country
+  const processedTemplate = template.replace(/{{(\w+)\.(\w+)}}/g, (match, obj, prop) => {
     if (obj === 'address' && data.address && data.address[prop as keyof typeof data.address]) {
       return data.address[prop as keyof typeof data.address];
     }
@@ -85,4 +77,3 @@ export function formatPrimaryField(template: string, data: OwnerData): string {
     return match; // Return unmodified if not found
   });
 }
-

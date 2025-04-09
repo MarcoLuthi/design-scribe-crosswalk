@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,13 +16,12 @@ import {
 } from "@/utils/format-converter";
 import { Button } from "@/components/ui/button";
 import ProcivisOneCard from "./ProcivisOneCard";
-import { ArrowLeftRight, X, PlusCircle, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
+import { ArrowLeftRight, X, PlusCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { detectFormatType, isConvertibleFormat } from "@/utils/format-detector";
-import { FormatType } from "@/utils/format-detector"; // Importing FormatType to prevent redeclaration
+
+type FormatType = "OCA" | "ProcivisOne";
 
 const TranslationDashboard = () => {
   const [specification, setSpecification] = useState<DesignSpecification>(defaultSpecification);
@@ -41,7 +39,6 @@ const TranslationDashboard = () => {
     simple: {},
     arrays: {}
   });
-  const [detectedFormat, setDetectedFormat] = useState<FormatType | null>(null);
   
   const { toast } = useToast();
   const brandingOverlay = getBrandingOverlay(specification);
@@ -184,67 +181,6 @@ const TranslationDashboard = () => {
   };
   
   const handleSpecificationUpdate = (newSpec: object) => {
-    const detectedFormatType = detectFormatType(newSpec);
-    setDetectedFormat(detectedFormatType);
-    
-    if (detectedFormatType !== "Unknown" && detectedFormatType !== formatType) {
-      setFormatType(detectedFormatType);
-      
-      if (detectedFormatType === "OCA") {
-        const typedSpec = newSpec as DesignSpecification;
-        setSpecification(typedSpec);
-        setActiveEditorJSON(typedSpec);
-        setProcivisSpec(convertOCAToProcivisOne(typedSpec));
-        
-        const newData = createDefaultDataFromSchema(convertOCAToProcivisOne(typedSpec));
-        if (data.firstname) newData.firstname = data.firstname;
-        if (data.lastname) newData.lastname = data.lastname;
-        if (data.address?.street) newData.address.street = data.address.street;
-        if (data.address?.city) newData.address.city = data.address.city;
-        if (data.address?.country) newData.address.country = data.address.country;
-        if (data.pets?.length) newData.pets = [...data.pets];
-        setData(newData);
-        
-        toast({
-          title: "Format detected",
-          description: "Switched to OCA format based on the pasted JSON",
-        });
-      } else if (detectedFormatType === "ProcivisOne") {
-        const typedSpec = newSpec as ProcivisOneSchema;
-        setProcivisSpec(typedSpec);
-        setActiveEditorJSON(typedSpec);
-        setSpecification(convertProcivisOneToOCA(typedSpec));
-        
-        const newData = createDefaultDataFromSchema(typedSpec);
-        if (data.firstname) newData.firstname = data.firstname;
-        if (data.lastname) newData.lastname = data.lastname;
-        if (data.address?.street) newData.address.street = data.address.street;
-        if (data.address?.city) newData.address.city = data.address.city;
-        if (data.address?.country) newData.address.country = data.address.country;
-        if (data.pets?.length) newData.pets = [...data.pets];
-        setData(newData);
-        
-        toast({
-          title: "Format detected",
-          description: "Switched to Procivis One format based on the pasted JSON",
-        });
-      } else {
-        if (formatType === "OCA") {
-          const typedSpec = newSpec as DesignSpecification;
-          setSpecification(typedSpec);
-          setActiveEditorJSON(typedSpec);
-          setProcivisSpec(convertOCAToProcivisOne(typedSpec));
-        } else {
-          const typedSpec = newSpec as ProcivisOneSchema;
-          setProcivisSpec(typedSpec);
-          setActiveEditorJSON(typedSpec);
-          setSpecification(convertProcivisOneToOCA(typedSpec));
-        }
-        setConvertedJson(null);
-      }
-      return;
-    }
-    
     if (formatType === "OCA") {
       const typedSpec = newSpec as DesignSpecification;
       setSpecification(typedSpec);
@@ -271,8 +207,8 @@ const TranslationDashboard = () => {
     if (data.address?.city) newData.address.city = data.address.city;
     if (data.address?.country) newData.address.country = data.address.country;
     
-    if (data.pets?.length) {
-      newData.pets = [...data.pets];
+    if ((data as any).etwtwrt) {
+      (newData as any).etwtwrt = (data as any).etwtwrt;
     }
     
     setData(newData);
@@ -302,8 +238,8 @@ const TranslationDashboard = () => {
     if (data.address?.city) newData.address.city = data.address.city;
     if (data.address?.country) newData.address.country = data.address.country;
     
-    if (data.pets?.length) {
-      newData.pets = [...data.pets];
+    if ((data as any).etwtwrt) {
+      (newData as any).etwtwrt = (data as any).etwtwrt;
     }
     
     setData(newData);
@@ -567,15 +503,6 @@ const TranslationDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {detectedFormat === "Unknown" && (
-                  <Alert className="mb-4" variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Unrecognized Format</AlertTitle>
-                    <AlertDescription>
-                      The pasted JSON does not match either OCA or Procivis One format. Some features may not work correctly.
-                    </AlertDescription>
-                  </Alert>
-                )}
                 <JsonEditor 
                   initialJson={activeEditorJSON} 
                   onJsonUpdate={handleSpecificationUpdate} 
@@ -634,7 +561,6 @@ const TranslationDashboard = () => {
                       size="sm"
                       onClick={handleConvertToProcivisOne}
                       title="Convert to Procivis One"
-                      disabled={!isConvertibleFormat(specification, "ProcivisOne")}
                     >
                       <ArrowLeftRight className="h-4 w-4 mr-2" />
                       To Procivis One
@@ -671,7 +597,6 @@ const TranslationDashboard = () => {
                       size="sm"
                       onClick={handleConvertToOCA}
                       title="Convert to OCA"
-                      disabled={!isConvertibleFormat(procivisSpec, "OCA")}
                     >
                       <ArrowLeftRight className="h-4 w-4 mr-2" />
                       To OCA
@@ -712,10 +637,6 @@ const TranslationDashboard = () => {
                     size="sm"
                     onClick={formatType === "OCA" ? handleConvertToProcivisOne : handleConvertToOCA}
                     title={formatType === "OCA" ? "Convert to Procivis One" : "Convert to OCA"}
-                    disabled={!isConvertibleFormat(
-                      formatType === "OCA" ? specification : procivisSpec, 
-                      formatType === "OCA" ? "ProcivisOne" : "OCA"
-                    )}
                   >
                     <ArrowLeftRight className="h-4 w-4 mr-2" />
                     {formatType === "OCA" ? "To Procivis One" : "To OCA"}
