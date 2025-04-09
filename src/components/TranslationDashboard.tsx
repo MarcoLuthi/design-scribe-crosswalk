@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { defaultProcivisOneSchema } from "@/data/default-procivis-spec";
 import JsonEditor from "./JsonEditor";
 import PetPermit from "./PetPermit";
 import { formatPrimaryField, getBrandingOverlay, getMetaOverlay, getDataSourceOverlays } from "@/utils/design-parser";
-import { DesignSpecification, OwnerData } from "@/types/design-spec";
+import { DesignSpecification, OwnerData, PetData } from "@/types/design-spec";
 import { ProcivisOneSchema } from "@/types/procivis-one-spec";
 import { convertOCAToProcivisOne, convertProcivisOneToOCA, formatProcivisOnePreview } from "@/utils/format-converter";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,6 @@ const TranslationDashboard = () => {
   
   const procivisPreview = formatProcivisOnePreview(procivisSpec, data);
   
-  // Extract data structure from the current active specification
   useEffect(() => {
     if (formatType === "OCA") {
       extractOCADataStructure();
@@ -53,7 +51,6 @@ const TranslationDashboard = () => {
     }
   }, [specification, procivisSpec, formatType]);
   
-  // Extract data structure from OCA specification
   const extractOCADataStructure = () => {
     const structure: {
       simple: { [key: string]: string[] },
@@ -63,20 +60,16 @@ const TranslationDashboard = () => {
       arrays: {}
     };
     
-    // Process data source overlays to determine data structure
     const dataSourceOverlays = getDataSourceOverlays(specification);
     
     dataSourceOverlays.forEach(overlay => {
-      // Get the capture base for this overlay
       const captureBase = specification.capture_bases.find(base => base.digest === overlay.capture_base);
       if (!captureBase) return;
       
       Object.entries(overlay.attribute_sources).forEach(([attribute, path]) => {
         const sourcePath = path as string;
         
-        // Process array attributes
         if (sourcePath.includes('[*]')) {
-          // Extract the array name and field
           const arrayPathMatch = sourcePath.match(/\$\.(\w+)(?:\[\*\])(?:\.(\w+))?/);
           if (arrayPathMatch) {
             const arrayName = arrayPathMatch[1];
@@ -90,13 +83,10 @@ const TranslationDashboard = () => {
               structure.arrays[arrayName].fields.push(fieldName);
             }
           }
-        } 
-        // Process standard attributes
-        else {
+        } else {
           const pathParts = sourcePath.replace(/\$\./g, '').split('.');
           
           if (pathParts.length === 1) {
-            // Top-level attribute
             if (!structure.simple['root']) {
               structure.simple['root'] = [];
             }
@@ -104,7 +94,6 @@ const TranslationDashboard = () => {
               structure.simple['root'].push(pathParts[0]);
             }
           } else {
-            // Nested attribute
             const group = pathParts[0];
             const field = pathParts[1];
             
@@ -123,7 +112,6 @@ const TranslationDashboard = () => {
     setDataStructure(structure);
   };
   
-  // Extract data structure from Procivis One specification
   const extractProcivisOneDataStructure = () => {
     const structure: {
       simple: { [key: string]: string[] },
@@ -138,7 +126,6 @@ const TranslationDashboard = () => {
         const key = claim.key.toLowerCase();
         
         if (claim.datatype === "OBJECT" && claim.array) {
-          // Handle array of objects
           structure.arrays[key] = { fields: [] };
           
           if (claim.claims && claim.claims.length > 0) {
@@ -148,18 +135,14 @@ const TranslationDashboard = () => {
               }
             });
           }
-        } 
-        else if (claim.datatype === "OBJECT" && !claim.array) {
-          // Handle nested object (group)
+        } else if (claim.datatype === "OBJECT" && !claim.array) {
           const groupKey = key;
           structure.simple[groupKey] = [];
           
           if (claim.claims && claim.claims.length > 0) {
             processClaimsRecursively(claim.claims, `${prefix}${key}.`, groupKey);
           }
-        } 
-        else {
-          // Handle simple field
+        } else {
           if (parentKey) {
             if (!structure.simple[parentKey]) {
               structure.simple[parentKey] = [];
@@ -225,7 +208,6 @@ const TranslationDashboard = () => {
     setConvertedJson(null);
   };
   
-  // Get or create nested value
   const getNestedValue = (obj: any, path: string) => {
     const parts = path.split('.');
     let current = obj;
@@ -240,12 +222,10 @@ const TranslationDashboard = () => {
     return current;
   };
   
-  // Update a specific data field
   const updateDataField = (fieldPath: string, value: string) => {
     const newData = { ...data };
     const parts = fieldPath.split('.');
     
-    // Handle nested properties
     if (parts.length > 1) {
       let current: any = newData;
       for (let i = 0; i < parts.length - 1; i++) {
@@ -262,14 +242,17 @@ const TranslationDashboard = () => {
     setData(newData as OwnerData);
   };
   
-  // Handle adding a new item to an array
   const addArrayItem = (arrayName: string) => {
     const newData = { ...data };
+    
     if (!newData[arrayName as keyof typeof newData]) {
-      newData[arrayName as keyof typeof newData] = [];
+      if (arrayName === 'pets') {
+        newData.pets = [] as PetData[];
+      } else {
+        (newData as any)[arrayName] = [];
+      }
     }
     
-    // Create new item with structure from dataStructure
     const newItem: Record<string, string> = {};
     if (dataStructure.arrays[arrayName]) {
       dataStructure.arrays[arrayName].fields.forEach(field => {
@@ -277,44 +260,59 @@ const TranslationDashboard = () => {
       });
     }
     
-    // Push the new item
-    (newData[arrayName as keyof typeof newData] as any[]).push(newItem);
+    if (arrayName === 'pets') {
+      newData.pets.push(newItem as unknown as PetData);
+    } else {
+      ((newData as any)[arrayName] as any[]).push(newItem);
+    }
+    
     setData(newData as OwnerData);
   };
   
-  // Handle updating an array item
   const updateArrayItem = (arrayName: string, index: number, field: string, value: string) => {
     const newData = { ...data };
+    
     if (!newData[arrayName as keyof typeof newData]) {
-      newData[arrayName as keyof typeof newData] = [];
+      if (arrayName === 'pets') {
+        newData.pets = [] as PetData[];
+      } else {
+        (newData as any)[arrayName] = [];
+      }
     }
     
-    const array = newData[arrayName as keyof typeof newData] as any[];
-    if (!array[index]) {
-      array[index] = {};
+    if (arrayName === 'pets') {
+      if (!newData.pets[index]) {
+        newData.pets[index] = { name: '', race: '' } as PetData;
+      }
+      (newData.pets[index] as any)[field] = value;
+    } else {
+      const array = (newData as any)[arrayName] as any[];
+      if (!array[index]) {
+        array[index] = {};
+      }
+      array[index][field] = value;
     }
     
-    array[index][field] = value;
     setData(newData as OwnerData);
   };
   
-  // Handle removing an array item
   const removeArrayItem = (arrayName: string, index: number) => {
     const newData = { ...data };
-    if (newData[arrayName as keyof typeof newData]) {
+    
+    if (arrayName === 'pets' && newData.pets) {
+      newData.pets = newData.pets.filter((_, i) => i !== index);
+    } else if (newData[arrayName as keyof typeof newData]) {
       const array = newData[arrayName as keyof typeof newData] as any[];
-      newData[arrayName as keyof typeof newData] = array.filter((_, i) => i !== index) as any;
+      (newData as any)[arrayName] = array.filter((_, i) => i !== index);
     }
+    
     setData(newData as OwnerData);
   };
   
-  // Render data editor based on the current data structure
   const renderDataEditor = () => {
     return (
       <div className="space-y-6">
-        {/* Render simple fields grouped by their parent */}
         {Object.entries(dataStructure.simple).map(([group, fields]) => {
-          // Skip empty groups
           if (fields.length === 0) return null;
           
           const groupLabel = group === 'root' ? 'General Information' : group.charAt(0).toUpperCase() + group.slice(1);
@@ -346,7 +344,6 @@ const TranslationDashboard = () => {
           );
         })}
         
-        {/* Render array fields */}
         {Object.entries(dataStructure.arrays).map(([arrayName, arrayConfig]) => {
           const items = data[arrayName as keyof typeof data] as any[] || [];
           
