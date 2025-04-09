@@ -64,7 +64,7 @@ const ProcivisOneCard = ({
       </div>
       
       {/* Main card body with aspect ratio */}
-      <AspectRatio ratio={16/9} className="w-full">
+      <AspectRatio ratio={1.64} className="w-full">
         <div
           className="w-full h-full"
           style={
