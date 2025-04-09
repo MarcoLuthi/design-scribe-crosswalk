@@ -236,6 +236,48 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
   return specification;
 }
 
+// Create default data structure based on the schema
+export function createDefaultDataFromSchema(schema: ProcivisOneSchema): OwnerData {
+  const data: Partial<OwnerData> = {
+    firstname: "",
+    lastname: "",
+    address: {
+      street: "",
+      city: "",
+      country: ""
+    },
+    pets: []
+  };
+  
+  // Fill in the data structure based on schema claims
+  schema.claims.forEach(claim => {
+    const key = claim.key.toLowerCase().replace(/\s+/g, "_");
+    
+    if (claim.datatype === "OBJECT" && claim.array) {
+      // Handle array of objects (e.g., pets)
+      if (key === "pets") {
+        data.pets = [];
+      } else {
+        (data as any)[key] = [];
+      }
+    } else if (claim.datatype === "OBJECT" && !claim.array) {
+      // Handle nested object (e.g., address)
+      (data as any)[key] = {};
+      
+      // Fill in nested properties
+      claim.claims.forEach(nestedClaim => {
+        const nestedKey = nestedClaim.key.toLowerCase().replace(/\s+/g, "_");
+        ((data as any)[key] as any)[nestedKey] = "";
+      });
+    } else {
+      // Handle simple properties
+      (data as any)[key] = "";
+    }
+  });
+  
+  return data as OwnerData;
+}
+
 export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerData): {
   title: string;
   primaryText: string;

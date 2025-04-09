@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +9,18 @@ import PetPermit from "./PetPermit";
 import { formatPrimaryField, getBrandingOverlay, getMetaOverlay, getDataSourceOverlays } from "@/utils/design-parser";
 import { DesignSpecification, OwnerData, PetData } from "@/types/design-spec";
 import { ProcivisOneSchema } from "@/types/procivis-one-spec";
-import { convertOCAToProcivisOne, convertProcivisOneToOCA, formatProcivisOnePreview } from "@/utils/format-converter";
+import { 
+  convertOCAToProcivisOne, 
+  convertProcivisOneToOCA, 
+  formatProcivisOnePreview,
+  createDefaultDataFromSchema 
+} from "@/utils/format-converter";
 import { Button } from "@/components/ui/button";
 import ProcivisOneCard from "./ProcivisOneCard";
 import { ArrowLeftRight, X, PlusCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 
 type FormatType = "OCA" | "ProcivisOne";
 
@@ -34,6 +41,7 @@ const TranslationDashboard = () => {
     arrays: {}
   });
   
+  const { toast } = useToast();
   const brandingOverlay = getBrandingOverlay(specification);
   const metaOverlay = getMetaOverlay(specification);
   
@@ -194,6 +202,15 @@ const TranslationDashboard = () => {
     setFormatType("OCA");
     setActiveEditorJSON(convertedSpec);
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
+    
+    // Update data model to match the OCA structure
+    const defaultData = createDefaultDataFromSchema(procivisSpec);
+    setData(defaultData);
+    
+    toast({
+      title: "Format converted",
+      description: "Successfully converted from Procivis One to OCA format",
+    });
   };
   
   const handleConvertToProcivisOne = () => {
@@ -202,6 +219,11 @@ const TranslationDashboard = () => {
     setFormatType("ProcivisOne");
     setActiveEditorJSON(convertedSpec);
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
+    
+    toast({
+      title: "Format converted",
+      description: "Successfully converted from OCA to Procivis One format",
+    });
   };
   
   const handleCloseJsonOutput = () => {
