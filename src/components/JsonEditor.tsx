@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -11,6 +11,11 @@ interface JsonEditorProps {
 
 const JsonEditor = ({ initialJson, onJsonUpdate }: JsonEditorProps) => {
   const [jsonText, setJsonText] = useState(JSON.stringify(initialJson, null, 2));
+  
+  // Update jsonText when initialJson changes
+  useEffect(() => {
+    setJsonText(JSON.stringify(initialJson, null, 2));
+  }, [initialJson]);
   
   const handleUpdate = () => {
     try {

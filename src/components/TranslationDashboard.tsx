@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +23,7 @@ const TranslationDashboard = () => {
   const [procivisSpec, setProcivisSpec] = useState<ProcivisOneSchema>(defaultProcivisOneSchema);
   const [showBothPreviews, setShowBothPreviews] = useState(false);
   const [convertedJson, setConvertedJson] = useState<string | null>(null);
+  const [activeEditorJSON, setActiveEditorJSON] = useState<object>(defaultSpecification);
   
   // Extract branding and meta information for OCA format
   const brandingOverlay = getBrandingOverlay(specification);
@@ -41,6 +41,8 @@ const TranslationDashboard = () => {
     if (newFormat === formatType) return;
     
     setFormatType(newFormat);
+    // Update the active editor JSON to show the correct format
+    setActiveEditorJSON(newFormat === "OCA" ? specification : procivisSpec);
     // Clear any previously converted JSON
     setConvertedJson(null);
   };
@@ -49,11 +51,15 @@ const TranslationDashboard = () => {
     if (formatType === "OCA") {
       const typedSpec = newSpec as DesignSpecification;
       setSpecification(typedSpec);
+      // Update the active editor JSON
+      setActiveEditorJSON(typedSpec);
       // Update the Procivis spec to match the new OCA spec
       setProcivisSpec(convertOCAToProcivisOne(typedSpec));
     } else {
       const typedSpec = newSpec as ProcivisOneSchema;
       setProcivisSpec(typedSpec);
+      // Update the active editor JSON
+      setActiveEditorJSON(typedSpec);
       // Convert the Procivis spec to OCA format
       setSpecification(convertProcivisOneToOCA(typedSpec));
     }
@@ -65,6 +71,8 @@ const TranslationDashboard = () => {
     const convertedSpec = convertProcivisOneToOCA(procivisSpec);
     setSpecification(convertedSpec);
     setFormatType("OCA");
+    // Update the active editor JSON to the converted format
+    setActiveEditorJSON(convertedSpec);
     // Set the converted JSON text
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
   };
@@ -73,6 +81,8 @@ const TranslationDashboard = () => {
     const convertedSpec = convertOCAToProcivisOne(specification);
     setProcivisSpec(convertedSpec);
     setFormatType("ProcivisOne");
+    // Update the active editor JSON to the converted format
+    setActiveEditorJSON(convertedSpec);
     // Set the converted JSON text
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
   };
@@ -103,7 +113,6 @@ const TranslationDashboard = () => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left side: Configuration */}
         <Tabs defaultValue="specification" className="space-y-4">
           <TabsList className="grid grid-cols-2">
             <TabsTrigger value="specification">Design Specification</TabsTrigger>
@@ -115,12 +124,12 @@ const TranslationDashboard = () => {
               <CardHeader>
                 <CardTitle>Design Specification</CardTitle>
                 <CardDescription>
-                  Edit the JSON specification for your design
+                  Edit the JSON specification for your {formatType === "OCA" ? "OCA" : "Procivis One"} design
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <JsonEditor 
-                  initialJson={formatType === "OCA" ? specification : procivisSpec} 
+                  initialJson={activeEditorJSON} 
                   onJsonUpdate={handleSpecificationUpdate} 
                 />
               </CardContent>
@@ -145,7 +154,6 @@ const TranslationDashboard = () => {
           </TabsContent>
         </Tabs>
         
-        {/* Right side: Visualization */}
         <div className="flex flex-col space-y-6">
           {showBothPreviews ? (
             <>
@@ -256,7 +264,6 @@ const TranslationDashboard = () => {
         </div>
       </div>
       
-      {/* Converted JSON Output - now moved below the previews */}
       {convertedJson && (
         <div className="mt-8">
           <Card>
