@@ -220,6 +220,18 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
   backgroundColor: string;
   logo?: string;
 } {
+  // Add null checks for schema and its properties
+  if (!schema || !schema.layoutProperties) {
+    console.warn('Schema or layoutProperties is undefined, using default values');
+    return {
+      title: schema?.name || 'Untitled',
+      primaryText: data?.firstname || '',
+      secondaryText: data?.lastname || '',
+      backgroundColor: '#2C75E3', // Default blue color
+      logo: ''
+    };
+  }
+  
   const primaryAttr = schema.layoutProperties.primaryAttribute || "Firstname";
   const secondaryAttr = schema.layoutProperties.secondaryAttribute || "Lastname";
   
@@ -240,10 +252,10 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
   }
   
   return {
-    title: schema.name,
+    title: schema.name || 'Untitled',
     primaryText,
     secondaryText,
-    backgroundColor: schema.layoutProperties.background.color,
-    logo: schema.layoutProperties.logo.image
+    backgroundColor: schema.layoutProperties.background?.color || '#2C75E3',
+    logo: schema.layoutProperties.logo?.image
   };
 }
