@@ -115,6 +115,11 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
   const ownerLabelMap: Record<string, string> = {};
   const petLabelMap: Record<string, string> = {};
   
+  // Find primary and secondary attribute names to use in the primary field template
+  const primaryAttr = schema.layoutProperties.primaryAttribute.toLowerCase();
+  const secondaryAttr = schema.layoutProperties.secondaryAttribute?.toLowerCase() || "";
+  let primaryFieldTemplate = "";
+  
   schema.claims.forEach(claim => {
     if (claim.key === "Pets" && claim.array && claim.datatype === "OBJECT") {
       // Process pet attributes
@@ -132,6 +137,16 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
       ownerLabelMap[attrKey] = claim.key;
     }
   });
+  
+  // Create a primary field template based on the Procivis One primary and secondary attributes
+  if (primaryAttr === "firstname" && secondaryAttr === "lastname") {
+    primaryFieldTemplate = "{{firstname}} {{lastname}} from {{address_country}}";
+  } else if (primaryAttr === "lastname" && secondaryAttr === "firstname") {
+    primaryFieldTemplate = "{{lastname}}, {{firstname}} from {{address_country}}";
+  } else {
+    // Fallback to a generic template using the attributes from the schema
+    primaryFieldTemplate = `{{${primaryAttr}}}${secondaryAttr ? ` {{${secondaryAttr}}}` : ""} from {{address_country}}`;
+  }
   
   // Create the OCA specification
   const specification: DesignSpecification = {
@@ -169,7 +184,7 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
         theme: "light",
         logo: schema.layoutProperties.logo.image,
         primary_background_color: schema.layoutProperties.background.color,
-        primary_field: "{{firstname}} {{lastname}} from {{address_country}}"
+        primary_field: primaryFieldTemplate
       },
       // Meta overlay
       {
