@@ -1,6 +1,6 @@
 
 import { DesignSpecification, OwnerData } from "../types/design-spec";
-import { ProcivisOneSchema } from "../types/procivis-one-spec";
+import { ProcivisOneSchema, ProcivisOneClaim } from "../types/procivis-one-spec";
 import { getBrandingOverlay, getMetaOverlay, getLabelOverlays } from "./design-parser";
 
 export function convertOCAToProcivisOne(specification: DesignSpecification): ProcivisOneSchema {
@@ -32,7 +32,7 @@ export function convertOCAToProcivisOne(specification: DesignSpecification): Pro
             createdDate: "",
             lastModified: "",
             key: label,
-            datatype: "STRING",
+            datatype: "STRING" as const,
             required: true,
             array: false,
             claims: []
@@ -44,7 +44,7 @@ export function convertOCAToProcivisOne(specification: DesignSpecification): Pro
           createdDate: "",
           lastModified: "",
           key: baseLabelOverlay?.attribute_labels[key] || key,
-          datatype: "OBJECT",
+          datatype: "OBJECT" as const,
           required: true,
           array: true,
           claims: petClaims
@@ -57,7 +57,7 @@ export function convertOCAToProcivisOne(specification: DesignSpecification): Pro
         createdDate: "",
         lastModified: "",
         key: baseLabelOverlay?.attribute_labels[key] || key,
-        datatype: "STRING",
+        datatype: "STRING" as const,
         required: true,
         array: false,
         claims: []
