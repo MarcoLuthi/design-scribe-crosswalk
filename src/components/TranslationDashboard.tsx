@@ -210,6 +210,8 @@ const TranslationDashboard = () => {
                     backgroundColor={procivisPreview.backgroundColor}
                     backgroundImage={procivisPreview.backgroundImage}
                     logo={procivisPreview.logo}
+                    logoFontColor={procivisPreview.logoFontColor}
+                    logoBackgroundColor={procivisPreview.logoBackgroundColor}
                   />
                 </CardContent>
               </Card>
@@ -257,6 +259,8 @@ const TranslationDashboard = () => {
                     backgroundColor={procivisPreview.backgroundColor}
                     backgroundImage={procivisPreview.backgroundImage}
                     logo={procivisPreview.logo}
+                    logoFontColor={procivisPreview.logoFontColor}
+                    logoBackgroundColor={procivisPreview.logoBackgroundColor}
                   />
                 )}
               </CardContent>
