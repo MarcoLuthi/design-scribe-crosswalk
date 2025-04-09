@@ -16,7 +16,7 @@ export interface ProcivisOneBackground {
 }
 
 export interface ProcivisOneLogo {
-  image: string;
+  image?: string;
   fontColor: string;
   backgroundColor: string;
 }

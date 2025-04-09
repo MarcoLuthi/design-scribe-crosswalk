@@ -219,6 +219,8 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
   backgroundColor: string;
   backgroundImage?: string;
   logo?: string;
+  logoFontColor?: string;
+  logoBackgroundColor?: string;
 } {
   // Add null checks for schema and its properties
   if (!schema || !schema.layoutProperties) {
@@ -228,7 +230,9 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
       primaryText: data?.firstname || '',
       secondaryText: data?.lastname || '',
       backgroundColor: '#2C75E3', // Default blue color
-      logo: ''
+      logo: '',
+      logoFontColor: '#fff',
+      logoBackgroundColor: '#2C75E3'
     };
   }
   
@@ -245,14 +249,18 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
     primaryText = data.lastname;
   }
   
-  if (secondaryAttr.toLowerCase() === "firstname") {
+  if (secondaryAttr?.toLowerCase() === "firstname") {
     secondaryText = data.firstname;
-  } else if (secondaryAttr.toLowerCase() === "lastname") {
+  } else if (secondaryAttr?.toLowerCase() === "lastname") {
     secondaryText = data.lastname;
   }
   
   // Extract background image if available
   const backgroundImage = schema.layoutProperties.background?.image;
+  
+  // Extract logo font color and background color
+  const logoFontColor = schema.layoutProperties.logo?.fontColor || '#fff';
+  const logoBackgroundColor = schema.layoutProperties.logo?.backgroundColor || schema.layoutProperties.background?.color || '#2C75E3';
   
   return {
     title: schema.name || 'Untitled',
@@ -260,6 +268,8 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
     secondaryText,
     backgroundColor: schema.layoutProperties.background?.color || '#2C75E3',
     backgroundImage,
-    logo: schema.layoutProperties.logo?.image
+    logo: schema.layoutProperties.logo?.image,
+    logoFontColor,
+    logoBackgroundColor
   };
 }

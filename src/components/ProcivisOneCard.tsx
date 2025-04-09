@@ -1,5 +1,6 @@
 
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check } from "lucide-react";
 
 interface ProcivisOneCardProps {
@@ -9,6 +10,8 @@ interface ProcivisOneCardProps {
   backgroundColor: string;
   backgroundImage?: string;
   logo?: string;
+  logoFontColor?: string;
+  logoBackgroundColor?: string;
 }
 
 const ProcivisOneCard = ({
@@ -17,30 +20,46 @@ const ProcivisOneCard = ({
   secondaryText,
   backgroundColor,
   backgroundImage,
-  logo
+  logo,
+  logoFontColor = "#fff",
+  logoBackgroundColor = backgroundColor
 }: ProcivisOneCardProps) => {
+  // Get the first letter of the title for the fallback avatar display
+  const firstLetter = title && title.length > 0 ? title.charAt(0).toUpperCase() : "C";
+
   return (
     <div className="w-full max-w-md shadow-lg rounded-2xl overflow-hidden bg-slate-50">
-      {/* Header section with logo and title */}
+      {/* Header section with logo/avatar and title */}
       <div className="p-4 flex items-center gap-4">
-        {logo && (
-          <div 
-            className="w-16 h-16 rounded-md overflow-hidden flex items-center justify-center" 
-            style={{ backgroundColor }}
-          >
-            <img 
+        <Avatar 
+          className="w-16 h-16 rounded-md"
+          style={{ backgroundColor: logoBackgroundColor }}
+        >
+          {logo ? (
+            <AvatarImage 
               src={logo} 
-              alt="Logo" 
-              className="w-10 h-10 object-contain"
+              alt={`${title} logo`}
+              className="p-2"
             />
-          </div>
-        )}
+          ) : (
+            <AvatarFallback 
+              className="text-xl font-bold"
+              style={{ color: logoFontColor, backgroundColor: logoBackgroundColor }}
+            >
+              {firstLetter}
+            </AvatarFallback>
+          )}
+        </Avatar>
         <div>
           <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
           <div className="flex items-center gap-2 text-gray-600">
             <span className="text-base">{primaryText}</span>
-            <span className="text-sm">•</span>
-            <span className="text-base">{secondaryText}</span>
+            {secondaryText && (
+              <>
+                <span className="text-sm">•</span>
+                <span className="text-base">{secondaryText}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -55,7 +74,7 @@ const ProcivisOneCard = ({
               : { backgroundColor }
           }
         >
-          {/* Content would go here */}
+          {/* Card content would go here */}
         </div>
       </AspectRatio>
     </div>
