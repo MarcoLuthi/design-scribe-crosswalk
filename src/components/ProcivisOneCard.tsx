@@ -74,7 +74,7 @@ const ProcivisOneCard = ({
       // Reset average color when background image changes or is removed
       setAverageColor(null);
     }
-  }, [backgroundImage, backgroundColor]);
+  }, [backgroundImage, backgroundColor, primaryText, secondaryText, title]); // Add dependencies to update preview when data changes
 
   // Use average color as fallback if available and no backgroundColor is provided
   const effectiveBackgroundColor = backgroundColor || averageColor || "#2C75E3";
@@ -110,8 +110,8 @@ const ProcivisOneCard = ({
         <div>
           <h2 className="text-xl font-bold text-gray-800">{title}</h2>
           <div className="flex items-center gap-2 text-gray-600">
-            <span className="text-sm">{primaryText}</span>
-            {hasSecondaryText && (
+            {primaryText && <span className="text-sm">{primaryText}</span>}
+            {primaryText && hasSecondaryText && (
               <>
                 <span className="text-xs">•</span>
                 <span className="text-sm">{secondaryText}</span>

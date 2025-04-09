@@ -237,7 +237,7 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
     return {
       title: schema?.name || 'Untitled',
       primaryText: data?.firstname || '',
-      secondaryText: data?.lastname || '',
+      secondaryText: '',
       backgroundColor: '#2C75E3', // Default blue color
       logo: '',
       logoFontColor: '#fff',
@@ -246,28 +246,40 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
   }
   
   const primaryAttr = schema.layoutProperties.primaryAttribute || "Firstname";
-  const secondaryAttr = schema.layoutProperties.secondaryAttribute || "Lastname";
+  const secondaryAttr = schema.layoutProperties.secondaryAttribute || "";
   
   // Extract primary and secondary text based on attribute names
-  let primaryText = data.firstname || "";
-  let secondaryText = data.lastname || "";
+  let primaryText = '';
+  let secondaryText = '';
   
+  // Get primary attribute value if it exists in data
   if (primaryAttr.toLowerCase() === "firstname") {
-    primaryText = data.firstname;
+    primaryText = data?.firstname || '';
   } else if (primaryAttr.toLowerCase() === "lastname") {
-    primaryText = data.lastname;
-  } else {
+    primaryText = data?.lastname || '';
+  } else if (data) {
     // Try to find the attribute in the data object
-    primaryText = data[primaryAttr.toLowerCase()] || primaryText;
+    primaryText = data[primaryAttr.toLowerCase() as keyof typeof data] || '';
+    // Handle nested properties by checking if it's a string
+    if (typeof primaryText !== 'string') {
+      primaryText = '';
+    }
   }
   
-  if (secondaryAttr?.toLowerCase() === "firstname") {
-    secondaryText = data.firstname;
-  } else if (secondaryAttr?.toLowerCase() === "lastname") {
-    secondaryText = data.lastname;
-  } else if (secondaryAttr) {
-    // Try to find the attribute in the data object
-    secondaryText = data[secondaryAttr.toLowerCase()] || secondaryText;
+  // Only get secondary text if secondaryAttr is defined
+  if (secondaryAttr) {
+    if (secondaryAttr.toLowerCase() === "firstname") {
+      secondaryText = data?.firstname || '';
+    } else if (secondaryAttr.toLowerCase() === "lastname") {
+      secondaryText = data?.lastname || '';
+    } else if (data) {
+      // Try to find the attribute in the data object
+      secondaryText = data[secondaryAttr.toLowerCase() as keyof typeof data] || '';
+      // Handle nested properties by checking if it's a string
+      if (typeof secondaryText !== 'string') {
+        secondaryText = '';
+      }
+    }
   }
   
   // Extract background image if available
