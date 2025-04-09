@@ -12,7 +12,7 @@ import { ProcivisOneSchema } from "@/types/procivis-one-spec";
 import { convertOCAToProcivisOne, convertProcivisOneToOCA, formatProcivisOnePreview } from "@/utils/format-converter";
 import { Button } from "@/components/ui/button";
 import ProcivisOneCard from "./ProcivisOneCard";
-import { ArrowLeftRight, RefreshCw } from "lucide-react";
+import { ArrowLeftRight, RefreshCw, X } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type FormatType = "OCA" | "ProcivisOne";
@@ -23,6 +23,7 @@ const TranslationDashboard = () => {
   const [formatType, setFormatType] = useState<FormatType>("OCA");
   const [procivisSpec, setProcivisSpec] = useState<ProcivisOneSchema>(defaultProcivisOneSchema);
   const [showBothPreviews, setShowBothPreviews] = useState(false);
+  const [convertedJson, setConvertedJson] = useState<string | null>(null);
   
   // Extract branding and meta information for OCA format
   const brandingOverlay = getBrandingOverlay(specification);
@@ -40,6 +41,8 @@ const TranslationDashboard = () => {
     if (newFormat === formatType) return;
     
     setFormatType(newFormat);
+    // Clear any previously converted JSON
+    setConvertedJson(null);
   };
   
   const handleSpecificationUpdate = (newSpec: object) => {
@@ -54,16 +57,28 @@ const TranslationDashboard = () => {
       // Convert the Procivis spec to OCA format
       setSpecification(convertProcivisOneToOCA(typedSpec));
     }
+    // Clear any previously converted JSON
+    setConvertedJson(null);
   };
   
   const handleConvertToOCA = () => {
-    setSpecification(convertProcivisOneToOCA(procivisSpec));
+    const convertedSpec = convertProcivisOneToOCA(procivisSpec);
+    setSpecification(convertedSpec);
     setFormatType("OCA");
+    // Set the converted JSON text
+    setConvertedJson(JSON.stringify(convertedSpec, null, 2));
   };
   
   const handleConvertToProcivisOne = () => {
-    setProcivisSpec(convertOCAToProcivisOne(specification));
+    const convertedSpec = convertOCAToProcivisOne(specification);
+    setProcivisSpec(convertedSpec);
     setFormatType("ProcivisOne");
+    // Set the converted JSON text
+    setConvertedJson(JSON.stringify(convertedSpec, null, 2));
+  };
+  
+  const handleCloseJsonOutput = () => {
+    setConvertedJson(null);
   };
   
   return (
@@ -86,6 +101,34 @@ const TranslationDashboard = () => {
           </Button>
         </div>
       </div>
+      
+      {/* Converted JSON Output */}
+      {convertedJson && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Converted {formatType} Format</CardTitle>
+                <CardDescription>
+                  JSON representation of the converted format
+                </CardDescription>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleCloseJsonOutput}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-80 overflow-y-auto whitespace-pre">
+              {convertedJson}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left side: Configuration */}
