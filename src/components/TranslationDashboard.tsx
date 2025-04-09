@@ -72,14 +72,14 @@ const TranslationDashboard = () => {
         <div className="flex flex-col space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Preview: Pet Permit</CardTitle>
+              <CardTitle>Preview</CardTitle>
               <CardDescription>
                 Visualization of the design based on the specification and data
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center p-6">
               <PetPermit
-                title={metaOverlay?.name || "Pet Permit"}
+                title={metaOverlay?.name || "SWIYU"}
                 primaryField={primaryField}
                 backgroundColor={brandingOverlay?.primary_background_color || "#2C75E3"}
                 logo={brandingOverlay?.logo}
