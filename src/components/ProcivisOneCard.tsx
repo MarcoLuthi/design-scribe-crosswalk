@@ -84,7 +84,7 @@ const ProcivisOneCard = ({
   const hasSecondaryText = secondaryText && secondaryText.trim() !== "";
 
   return (
-    <div className="w-[360px] shadow-lg rounded-2xl overflow-hidden bg-slate-50">
+    <div className="w-[420px] shadow-lg rounded-2xl overflow-hidden bg-slate-50">
       {/* Header section with logo/avatar and title */}
       <div className="p-4 flex items-center gap-4">
         <div 
