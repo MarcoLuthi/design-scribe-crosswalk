@@ -2,6 +2,7 @@
 import { Check } from "lucide-react";
 import { OwnerData } from "../types/design-spec";
 import { cn } from "@/lib/utils";
+import { formatPrimaryField } from "../utils/design-parser";
 
 interface PetPermitProps {
   title: string;
@@ -18,6 +19,9 @@ const PetPermit = ({
   logo,
   data
 }: PetPermitProps) => {
+  // Format the primary field template with the actual data
+  const formattedPrimaryField = formatPrimaryField(primaryField, data);
+  
   return (
     <div 
       className="w-full max-w-md rounded-3xl overflow-hidden shadow-lg"
@@ -35,7 +39,7 @@ const PetPermit = ({
         <h1 className="text-white text-3xl font-bold mb-4">{title}</h1>
         
         {/* Primary Field */}
-        <p className="text-white text-2xl mb-8">{primaryField}</p>
+        <p className="text-white text-2xl mb-8">{formattedPrimaryField}</p>
         
         {/* Bottom validation section */}
         <div className="mt-auto">
