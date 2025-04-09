@@ -18,6 +18,9 @@ const PetPermit = ({
   logo,
   data
 }: PetPermitProps) => {
+  // Check if we need to display some pet information
+  const hasPets = data.pets && data.pets.length > 0;
+  
   return (
     <div 
       className="w-full max-w-md rounded-3xl overflow-hidden shadow-lg"
@@ -36,6 +39,20 @@ const PetPermit = ({
         
         {/* Primary Field */}
         <p className="text-white text-2xl mb-8">{primaryField}</p>
+        
+        {/* Pet Information (if available) */}
+        {hasPets && (
+          <div className="bg-white/10 p-4 rounded-lg mb-8">
+            <h3 className="text-white text-xl mb-2">Registered Pets:</h3>
+            <ul className="space-y-2">
+              {data.pets.map((pet, index) => (
+                <li key={index} className="text-white">
+                  <strong>{pet.name}</strong>: {pet.race}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         
         {/* Bottom validation section */}
         <div className="mt-auto">
