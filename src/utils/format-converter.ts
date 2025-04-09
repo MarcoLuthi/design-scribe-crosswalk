@@ -114,6 +114,11 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
   // Process claims and separate owner vs pet attributes
   const ownerLabelMap: Record<string, string> = {};
   const petLabelMap: Record<string, string> = {};
+  const ownerDataSourceMap: Record<string, string> = {};
+  const petDataSourceMap: Record<string, string> = {};
+  
+  // Helper to process grouped claims (like address)
+  const groupedAttributes: Record<string, string[]> = {};
   
   // Find primary and secondary attribute names to use in the primary field template
   const primaryAttr = schema.layoutProperties.primaryAttribute.toLowerCase();
@@ -121,20 +126,40 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
   let primaryFieldTemplate = "";
   
   schema.claims.forEach(claim => {
+    const claimKey = claim.key.toLowerCase().replace(/\s+/g, "_");
+    
     if (claim.key === "Pets" && claim.array && claim.datatype === "OBJECT") {
       // Process pet attributes
       claim.claims.forEach(petClaim => {
-        petCaptureBase.attributes[petClaim.key.toLowerCase()] = "Text";
-        petLabelMap[petClaim.key.toLowerCase()] = petClaim.key;
+        const petKey = petClaim.key.toLowerCase().replace(/\s+/g, "_");
+        petCaptureBase.attributes[petKey] = "Text";
+        petLabelMap[petKey] = petClaim.key;
+        petDataSourceMap[petKey] = `$.pets[*].${petKey}`;
       });
       
       // Add pets to owner attributes
       ownerCaptureBase.attributes["pets"] = "Array[refs:IKLvtGx1NU0007DUTTmI_6Zw-hnGRFicZ5R4vAxg4j2j]";
+      ownerDataSourceMap["pets"] = "$.pets";
+    } else if (claim.datatype === "OBJECT" && !claim.array) {
+      // Process nested object (like address)
+      const groupKey = claimKey;
+      groupedAttributes[groupKey] = [];
+      
+      claim.claims.forEach(nestedClaim => {
+        const nestedKey = nestedClaim.key.toLowerCase().replace(/\s+/g, "_");
+        const fullKey = `${groupKey}_${nestedKey}`;
+        
+        // Add to owner attributes with group prefix
+        ownerCaptureBase.attributes[fullKey] = "Text";
+        ownerLabelMap[fullKey] = nestedClaim.key;
+        ownerDataSourceMap[fullKey] = `$.${groupKey}.${nestedKey}`;
+        groupedAttributes[groupKey].push(nestedKey);
+      });
     } else {
-      // Process owner attributes
-      const attrKey = claim.key.toLowerCase().replace(/\s+/g, "_");
-      ownerCaptureBase.attributes[attrKey] = "Text";
-      ownerLabelMap[attrKey] = claim.key;
+      // Process regular owner attributes
+      ownerCaptureBase.attributes[claimKey] = "Text";
+      ownerLabelMap[claimKey] = claim.key;
+      ownerDataSourceMap[claimKey] = `$.${claimKey}`;
     }
   });
   
@@ -165,24 +190,14 @@ export function convertProcivisOneToOCA(schema: ProcivisOneSchema): DesignSpecif
         type: "extend/overlays/data_source/1.0",
         capture_base: ownerCaptureBase.digest,
         format: "json",
-        attribute_sources: {
-          firstname: "$.firstname",
-          lastname: "$.lastname",
-          address_street: "$.address.street",
-          address_city: "$.address.city",
-          address_country: "$.address.country",
-          pets: "$.pets"
-        }
+        attribute_sources: ownerDataSourceMap
       },
       // Data source overlay for pets
       {
         type: "extend/overlays/data_source/1.0",
         capture_base: petCaptureBase.digest,
         format: "json",
-        attribute_sources: {
-          name: "$.pets[*].name",
-          race: "$.pets[*].race"
-        }
+        attribute_sources: petDataSourceMap
       },
       // Branding overlay
       {
