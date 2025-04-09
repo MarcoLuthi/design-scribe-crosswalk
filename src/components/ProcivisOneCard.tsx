@@ -77,6 +77,9 @@ const ProcivisOneCard = ({
   const effectiveBackgroundColor = backgroundColor || averageColor || "#2C75E3";
   const effectiveLogoBackgroundColor = logoBackgroundColor || effectiveBackgroundColor;
 
+  // Check if secondary text is empty, undefined, or just whitespace
+  const hasSecondaryText = secondaryText && secondaryText.trim() !== "";
+
   return (
     <div className="w-full max-w-xl shadow-lg rounded-2xl overflow-hidden bg-slate-50">
       {/* Header section with logo/avatar and title */}
@@ -105,7 +108,7 @@ const ProcivisOneCard = ({
           <h2 className="text-xl font-bold text-gray-800">{title}</h2>
           <div className="flex items-center gap-2 text-gray-600">
             <span className="text-sm">{primaryText}</span>
-            {secondaryText && secondaryText.trim() !== "" && (
+            {hasSecondaryText && (
               <>
                 <span className="text-xs">•</span>
                 <span className="text-sm">{secondaryText}</span>
