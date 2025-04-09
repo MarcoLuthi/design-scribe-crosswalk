@@ -70,6 +70,9 @@ const ProcivisOneCard = ({
       };
       
       img.src = backgroundImage;
+    } else {
+      // Reset average color when background image changes or is removed
+      setAverageColor(null);
     }
   }, [backgroundImage, backgroundColor]);
 
