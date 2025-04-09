@@ -1,7 +1,5 @@
 
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check } from "lucide-react";
 
 interface ProcivisOneCardProps {
   title: string;
@@ -32,7 +30,7 @@ const ProcivisOneCard = ({
       {/* Header section with logo/avatar and title */}
       <div className="p-4 flex items-center gap-4">
         <div 
-          className="w-16 h-16 rounded-md flex items-center justify-center"
+          className="w-14 h-14 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: logoBackgroundColor }}
         >
           {logo ? (
@@ -43,7 +41,7 @@ const ProcivisOneCard = ({
             />
           ) : (
             <span 
-              className="text-2xl font-bold"
+              className="text-3xl font-bold"
               style={{ color: logoFontColor }}
             >
               {firstLetter}
@@ -52,13 +50,13 @@ const ProcivisOneCard = ({
         </div>
         
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+          <h2 className="text-xl font-bold text-gray-800">{title}</h2>
           <div className="flex items-center gap-2 text-gray-600">
-            <span className="text-base">{primaryText}</span>
+            <span className="text-sm">{primaryText}</span>
             {secondaryText && (
               <>
-                <span className="text-sm">•</span>
-                <span className="text-base">{secondaryText}</span>
+                <span className="text-xs">•</span>
+                <span className="text-sm">{secondaryText}</span>
               </>
             )}
           </div>
@@ -66,7 +64,7 @@ const ProcivisOneCard = ({
       </div>
       
       {/* Main card body with aspect ratio */}
-      <AspectRatio ratio={16/8} className="w-full">
+      <AspectRatio ratio={16/9} className="w-full">
         <div
           className="w-full h-full"
           style={
