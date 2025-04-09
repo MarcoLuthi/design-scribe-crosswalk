@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +22,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { detectFormatType, FormatType, isConvertibleFormat } from "@/utils/format-detector";
-
-type FormatType = "OCA" | "ProcivisOne";
+import { detectFormatType, isConvertibleFormat } from "@/utils/format-detector";
+import { FormatType } from "@/utils/format-detector"; // Importing FormatType to prevent redeclaration
 
 const TranslationDashboard = () => {
   const [specification, setSpecification] = useState<DesignSpecification>(defaultSpecification);
@@ -271,8 +271,8 @@ const TranslationDashboard = () => {
     if (data.address?.city) newData.address.city = data.address.city;
     if (data.address?.country) newData.address.country = data.address.country;
     
-    if ((data as any).etwtwrt) {
-      (newData as any).etwtwrt = (data as any).etwtwrt;
+    if (data.pets?.length) {
+      newData.pets = [...data.pets];
     }
     
     setData(newData);
@@ -302,8 +302,8 @@ const TranslationDashboard = () => {
     if (data.address?.city) newData.address.city = data.address.city;
     if (data.address?.country) newData.address.country = data.address.country;
     
-    if ((data as any).etwtwrt) {
-      (newData as any).etwtwrt = (data as any).etwtwrt;
+    if (data.pets?.length) {
+      newData.pets = [...data.pets];
     }
     
     setData(newData);
@@ -568,7 +568,7 @@ const TranslationDashboard = () => {
               </CardHeader>
               <CardContent>
                 {detectedFormat === "Unknown" && (
-                  <Alert className="mb-4" variant="warning">
+                  <Alert className="mb-4" variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Unrecognized Format</AlertTitle>
                     <AlertDescription>
