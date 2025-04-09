@@ -26,7 +26,7 @@ const ProcivisOneCard = ({
   const firstLetter = title && title.length > 0 ? title.charAt(0).toUpperCase() : "C";
 
   return (
-    <div className="w-full max-w-md shadow-lg rounded-2xl overflow-hidden bg-slate-50">
+    <div className="w-full max-w-xl shadow-lg rounded-2xl overflow-hidden bg-slate-50">
       {/* Header section with logo/avatar and title */}
       <div className="p-4 flex items-center gap-4">
         <div 
