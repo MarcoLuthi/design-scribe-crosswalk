@@ -481,9 +481,9 @@ const TranslationDashboard = () => {
                   Edit the JSON specification for your design
                 </CardDescription>
                 <div className="mt-4">
-                  <ToggleGroup type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
-                    <ToggleGroupItem value="OCA">OCA Format</ToggleGroupItem>
-                    <ToggleGroupItem value="ProcivisOne">Procivis One Format</ToggleGroupItem>
+                  <ToggleGroup className="w-full" type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
+                    <ToggleGroupItem className="flex-1" value="OCA">SWIYU OCA Format</ToggleGroupItem>
+                    <ToggleGroupItem className="flex-1" value="ProcivisOne">Procivis One Format</ToggleGroupItem>
                   </ToggleGroup>
                 </div>
               </CardHeader>
@@ -536,7 +536,7 @@ const TranslationDashboard = () => {
                 <div>
                   <CardTitle>Preview</CardTitle>
                   <CardDescription>
-                    Visualization of the {formatType === "OCA" ? "OCA" : "Procivis One"} format
+                    Visualization of the {formatType === "OCA" ? "SWIYU OCA" : "Procivis One"} format
                     {formatType === "ProcivisOne" && !procivisPreview.backgroundImage && (
                       <span className="block text-xs text-amber-600 mt-1">
                         Note: Procivis One supports background images, but none is specified in this schema
