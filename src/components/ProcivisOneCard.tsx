@@ -122,7 +122,7 @@ const ProcivisOneCard = ({
       </div>
       
       {/* Main card body with fixed height */}
-      <div className="w-full h-[200px]">
+      <div className="w-full h-[180px]">
         <div
           className="w-full h-full"
           style={
