@@ -6,7 +6,7 @@ import { defaultData, defaultSpecification } from "@/data/default-specification"
 import { defaultProcivisOneSchema } from "@/data/default-procivis-spec";
 import JsonEditor from "./JsonEditor";
 import PetPermit from "./PetPermit";
-import { formatPrimaryField, getBrandingOverlay, getMetaOverlay } from "@/utils/design-parser";
+import { formatPrimaryField, getBrandingOverlay, getMetaOverlay, getDataSourceOverlays } from "@/utils/design-parser";
 import { DesignSpecification, OwnerData } from "@/types/design-spec";
 import { ProcivisOneSchema } from "@/types/procivis-one-spec";
 import { convertOCAToProcivisOne, convertProcivisOneToOCA, formatProcivisOnePreview } from "@/utils/format-converter";
@@ -27,6 +27,13 @@ const TranslationDashboard = () => {
   const [convertedJson, setConvertedJson] = useState<string | null>(null);
   const [activeEditorJSON, setActiveEditorJSON] = useState<object>(defaultSpecification);
   const [showAdvancedDataEdit, setShowAdvancedDataEdit] = useState(false);
+  const [dataStructure, setDataStructure] = useState<{
+    simple: { [key: string]: string[] },
+    arrays: { [key: string]: { fields: string[] } }
+  }>({
+    simple: {},
+    arrays: {}
+  });
   
   const brandingOverlay = getBrandingOverlay(specification);
   const metaOverlay = getMetaOverlay(specification);
@@ -37,58 +44,143 @@ const TranslationDashboard = () => {
   
   const procivisPreview = formatProcivisOnePreview(procivisSpec, data);
   
-  // Detect what data fields are needed based on the active specification
-  const [dataFields, setDataFields] = useState<string[]>([]);
-  
+  // Extract data structure from the current active specification
   useEffect(() => {
-    const fields: string[] = [];
-    
     if (formatType === "OCA") {
-      // Extract fields from OCA specification
-      specification.overlays.forEach(overlay => {
-        if (overlay.type === "extend/overlays/data_source/1.0") {
-          const dataSourceOverlay = overlay as any;
-          Object.values(dataSourceOverlay.attribute_sources).forEach(path => {
-            const cleanPath = (path as string).replace(/\$\./g, "").split("[")[0];
-            if (!fields.includes(cleanPath) && cleanPath !== "pets") {
-              fields.push(cleanPath);
-            }
-          });
-        }
-      });
+      extractOCADataStructure();
     } else {
-      // Extract fields from Procivis One specification
-      const extractFields = (claims: any[], prefix = "") => {
-        claims.forEach(claim => {
-          if (claim.datatype === "OBJECT" && claim.array && claim.key === "Pets") {
-            // Handle nested pet claims
-            if (claim.claims && claim.claims.length > 0) {
-              extractFields(claim.claims, "pets.");
+      extractProcivisOneDataStructure();
+    }
+  }, [specification, procivisSpec, formatType]);
+  
+  // Extract data structure from OCA specification
+  const extractOCADataStructure = () => {
+    const structure: {
+      simple: { [key: string]: string[] },
+      arrays: { [key: string]: { fields: string[] } }
+    } = {
+      simple: {},
+      arrays: {}
+    };
+    
+    // Process data source overlays to determine data structure
+    const dataSourceOverlays = getDataSourceOverlays(specification);
+    
+    dataSourceOverlays.forEach(overlay => {
+      // Get the capture base for this overlay
+      const captureBase = specification.capture_bases.find(base => base.digest === overlay.capture_base);
+      if (!captureBase) return;
+      
+      Object.entries(overlay.attribute_sources).forEach(([attribute, path]) => {
+        const sourcePath = path as string;
+        
+        // Process array attributes
+        if (sourcePath.includes('[*]')) {
+          // Extract the array name and field
+          const arrayPathMatch = sourcePath.match(/\$\.(\w+)(?:\[\*\])(?:\.(\w+))?/);
+          if (arrayPathMatch) {
+            const arrayName = arrayPathMatch[1];
+            const fieldName = arrayPathMatch[2];
+            
+            if (!structure.arrays[arrayName]) {
+              structure.arrays[arrayName] = { fields: [] };
             }
-          } else if (claim.datatype !== "OBJECT") {
-            const fieldPath = prefix + claim.key.toLowerCase();
-            if (!fields.includes(fieldPath)) {
-              fields.push(fieldPath);
+            
+            if (fieldName && !structure.arrays[arrayName].fields.includes(fieldName)) {
+              structure.arrays[arrayName].fields.push(fieldName);
             }
           }
-        });
-      };
-      
-      if (procivisSpec.claims) {
-        extractFields(procivisSpec.claims);
-      }
-    }
-    
-    // Add standard fields if not already included
-    const standardFields = ["firstname", "lastname", "address.street", "address.city", "address.country"];
-    standardFields.forEach(field => {
-      if (!fields.includes(field)) {
-        fields.push(field);
-      }
+        } 
+        // Process standard attributes
+        else {
+          const pathParts = sourcePath.replace(/\$\./g, '').split('.');
+          
+          if (pathParts.length === 1) {
+            // Top-level attribute
+            if (!structure.simple['root']) {
+              structure.simple['root'] = [];
+            }
+            if (!structure.simple['root'].includes(pathParts[0])) {
+              structure.simple['root'].push(pathParts[0]);
+            }
+          } else {
+            // Nested attribute
+            const group = pathParts[0];
+            const field = pathParts[1];
+            
+            if (!structure.simple[group]) {
+              structure.simple[group] = [];
+            }
+            
+            if (!structure.simple[group].includes(field)) {
+              structure.simple[group].push(field);
+            }
+          }
+        }
+      });
     });
     
-    setDataFields(fields);
-  }, [specification, procivisSpec, formatType]);
+    setDataStructure(structure);
+  };
+  
+  // Extract data structure from Procivis One specification
+  const extractProcivisOneDataStructure = () => {
+    const structure: {
+      simple: { [key: string]: string[] },
+      arrays: { [key: string]: { fields: string[] } }
+    } = {
+      simple: {},
+      arrays: {}
+    };
+    
+    const processClaimsRecursively = (claims: any[], prefix = "", parentKey = ""): void => {
+      claims.forEach(claim => {
+        const key = claim.key.toLowerCase();
+        
+        if (claim.datatype === "OBJECT" && claim.array) {
+          // Handle array of objects
+          structure.arrays[key] = { fields: [] };
+          
+          if (claim.claims && claim.claims.length > 0) {
+            claim.claims.forEach((subClaim: any) => {
+              if (subClaim.datatype !== "OBJECT") {
+                structure.arrays[key].fields.push(subClaim.key.toLowerCase());
+              }
+            });
+          }
+        } 
+        else if (claim.datatype === "OBJECT" && !claim.array) {
+          // Handle nested object (group)
+          const groupKey = key;
+          structure.simple[groupKey] = [];
+          
+          if (claim.claims && claim.claims.length > 0) {
+            processClaimsRecursively(claim.claims, `${prefix}${key}.`, groupKey);
+          }
+        } 
+        else {
+          // Handle simple field
+          if (parentKey) {
+            if (!structure.simple[parentKey]) {
+              structure.simple[parentKey] = [];
+            }
+            structure.simple[parentKey].push(key);
+          } else {
+            if (!structure.simple['root']) {
+              structure.simple['root'] = [];
+            }
+            structure.simple['root'].push(key);
+          }
+        }
+      });
+    };
+    
+    if (procivisSpec.claims) {
+      processClaimsRecursively(procivisSpec.claims);
+    }
+    
+    setDataStructure(structure);
+  };
   
   const handleFormatToggle = (newFormat: FormatType) => {
     if (newFormat === formatType) return;
@@ -133,6 +225,21 @@ const TranslationDashboard = () => {
     setConvertedJson(null);
   };
   
+  // Get or create nested value
+  const getNestedValue = (obj: any, path: string) => {
+    const parts = path.split('.');
+    let current = obj;
+    
+    for (let i = 0; i < parts.length; i++) {
+      if (current[parts[i]] === undefined) {
+        return "";
+      }
+      current = current[parts[i]];
+    }
+    
+    return current;
+  };
+  
   // Update a specific data field
   const updateDataField = (fieldPath: string, value: string) => {
     const newData = { ...data };
@@ -155,28 +262,155 @@ const TranslationDashboard = () => {
     setData(newData as OwnerData);
   };
   
-  // Handle adding a new pet
-  const addPet = () => {
+  // Handle adding a new item to an array
+  const addArrayItem = (arrayName: string) => {
     const newData = { ...data };
-    newData.pets = [...(newData.pets || []), { name: "", race: "" }];
-    setData(newData);
-  };
-  
-  // Handle updating a pet
-  const updatePet = (index: number, field: string, value: string) => {
-    const newData = { ...data };
-    if (!newData.pets) {
-      newData.pets = [];
+    if (!newData[arrayName as keyof typeof newData]) {
+      newData[arrayName as keyof typeof newData] = [];
     }
-    newData.pets[index] = { ...newData.pets[index], [field]: value };
-    setData(newData);
+    
+    // Create new item with structure from dataStructure
+    const newItem: Record<string, string> = {};
+    if (dataStructure.arrays[arrayName]) {
+      dataStructure.arrays[arrayName].fields.forEach(field => {
+        newItem[field] = "";
+      });
+    }
+    
+    // Push the new item
+    (newData[arrayName as keyof typeof newData] as any[]).push(newItem);
+    setData(newData as OwnerData);
   };
   
-  // Handle removing a pet
-  const removePet = (index: number) => {
+  // Handle updating an array item
+  const updateArrayItem = (arrayName: string, index: number, field: string, value: string) => {
     const newData = { ...data };
-    newData.pets = newData.pets.filter((_, i) => i !== index);
-    setData(newData);
+    if (!newData[arrayName as keyof typeof newData]) {
+      newData[arrayName as keyof typeof newData] = [];
+    }
+    
+    const array = newData[arrayName as keyof typeof newData] as any[];
+    if (!array[index]) {
+      array[index] = {};
+    }
+    
+    array[index][field] = value;
+    setData(newData as OwnerData);
+  };
+  
+  // Handle removing an array item
+  const removeArrayItem = (arrayName: string, index: number) => {
+    const newData = { ...data };
+    if (newData[arrayName as keyof typeof newData]) {
+      const array = newData[arrayName as keyof typeof newData] as any[];
+      newData[arrayName as keyof typeof newData] = array.filter((_, i) => i !== index) as any;
+    }
+    setData(newData as OwnerData);
+  };
+  
+  // Render data editor based on the current data structure
+  const renderDataEditor = () => {
+    return (
+      <div className="space-y-6">
+        {/* Render simple fields grouped by their parent */}
+        {Object.entries(dataStructure.simple).map(([group, fields]) => {
+          // Skip empty groups
+          if (fields.length === 0) return null;
+          
+          const groupLabel = group === 'root' ? 'General Information' : group.charAt(0).toUpperCase() + group.slice(1);
+          
+          return (
+            <div key={group} className="space-y-4">
+              <h3 className="text-base font-medium">{groupLabel}</h3>
+              <div className="space-y-3">
+                {fields.map(field => {
+                  const fieldPath = group === 'root' ? field : `${group}.${field}`;
+                  const fieldValue = getNestedValue(data, fieldPath);
+                  
+                  return (
+                    <div key={fieldPath} className="grid grid-cols-3 items-center gap-4">
+                      <label className="text-sm font-medium text-right capitalize">
+                        {field}:
+                      </label>
+                      <input
+                        type="text"
+                        className="col-span-2 px-3 py-2 border rounded-md"
+                        value={fieldValue || ""}
+                        onChange={(e) => updateDataField(fieldPath, e.target.value)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+        
+        {/* Render array fields */}
+        {Object.entries(dataStructure.arrays).map(([arrayName, arrayConfig]) => {
+          const items = data[arrayName as keyof typeof data] as any[] || [];
+          
+          return (
+            <div key={arrayName} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-medium capitalize">{arrayName}</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addArrayItem(arrayName)}
+                >
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Add {arrayName.slice(0, -1)}
+                </Button>
+              </div>
+              
+              {items.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {arrayConfig.fields.map(field => (
+                        <TableHead key={field} className="capitalize">{field}</TableHead>
+                      ))}
+                      <TableHead className="w-20">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((item, index) => (
+                      <TableRow key={index}>
+                        {arrayConfig.fields.map(field => (
+                          <TableCell key={field}>
+                            <input
+                              type="text"
+                              className="w-full px-2 py-1 border rounded-md"
+                              value={item[field] || ""}
+                              onChange={(e) => updateArrayItem(arrayName, index, field, e.target.value)}
+                            />
+                          </TableCell>
+                        ))}
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeArrayItem(arrayName, index)}
+                            className="h-7 w-7 text-destructive"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center p-4 border border-dashed rounded-md text-muted-foreground">
+                  No {arrayName} added yet. Click "Add {arrayName.slice(0, -1)}" to add one.
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
   };
   
   return (
@@ -253,110 +487,7 @@ const TranslationDashboard = () => {
                     onJsonUpdate={(json) => setData(json as OwnerData)} 
                   />
                 ) : (
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <h3 className="text-base font-medium">Person Information</h3>
-                      <div className="space-y-3">
-                        {dataFields.filter(f => !f.includes('.')).map(field => (
-                          <div key={field} className="grid grid-cols-3 items-center gap-4">
-                            <label className="text-sm font-medium text-right capitalize">
-                              {field}:
-                            </label>
-                            <input
-                              type="text"
-                              className="col-span-2 px-3 py-2 border rounded-md"
-                              value={(data as any)[field] || ""}
-                              onChange={(e) => updateDataField(field, e.target.value)}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <h3 className="text-base font-medium">Address</h3>
-                      <div className="space-y-3">
-                        {dataFields.filter(f => f.startsWith('address.')).map(field => {
-                          const fieldName = field.split('.')[1];
-                          return (
-                            <div key={field} className="grid grid-cols-3 items-center gap-4">
-                              <label className="text-sm font-medium text-right capitalize">
-                                {fieldName}:
-                              </label>
-                              <input
-                                type="text"
-                                className="col-span-2 px-3 py-2 border rounded-md"
-                                value={data.address?.[fieldName as keyof typeof data.address] || ""}
-                                onChange={(e) => updateDataField(field, e.target.value)}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base font-medium">Pets</h3>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={addPet}
-                        >
-                          <PlusCircle className="h-4 w-4 mr-1" />
-                          Add Pet
-                        </Button>
-                      </div>
-                      
-                      {data.pets && data.pets.length > 0 ? (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Name</TableHead>
-                              <TableHead>Race</TableHead>
-                              <TableHead className="w-20">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {data.pets.map((pet, index) => (
-                              <TableRow key={index}>
-                                <TableCell>
-                                  <input
-                                    type="text"
-                                    className="w-full px-2 py-1 border rounded-md"
-                                    value={pet.name}
-                                    onChange={(e) => updatePet(index, 'name', e.target.value)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <input
-                                    type="text"
-                                    className="w-full px-2 py-1 border rounded-md"
-                                    value={pet.race}
-                                    onChange={(e) => updatePet(index, 'race', e.target.value)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removePet(index)}
-                                    className="h-7 w-7 text-destructive"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      ) : (
-                        <div className="text-center p-4 border border-dashed rounded-md text-muted-foreground">
-                          No pets added yet. Click "Add Pet" to add one.
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  renderDataEditor()
                 )}
               </CardContent>
             </Card>
