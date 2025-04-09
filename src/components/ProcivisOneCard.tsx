@@ -105,7 +105,7 @@ const ProcivisOneCard = ({
           <h2 className="text-xl font-bold text-gray-800">{title}</h2>
           <div className="flex items-center gap-2 text-gray-600">
             <span className="text-sm">{primaryText}</span>
-            {secondaryText && (
+            {secondaryText && secondaryText.trim() !== "" && (
               <>
                 <span className="text-xs">•</span>
                 <span className="text-sm">{secondaryText}</span>
