@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -199,23 +198,51 @@ const TranslationDashboard = () => {
   const handleConvertToOCA = () => {
     const convertedSpec = convertProcivisOneToOCA(procivisSpec);
     setSpecification(convertedSpec);
+    
+    const newData = createDefaultDataFromSchema(procivisSpec);
+    
+    if (data.firstname) newData.firstname = data.firstname;
+    if (data.lastname) newData.lastname = data.lastname;
+    if (data.address?.street) newData.address.street = data.address.street;
+    if (data.address?.city) newData.address.city = data.address.city;
+    if (data.address?.country) newData.address.country = data.address.country;
+    
+    if ((data as any).etwtwrt) {
+      (newData as any).etwtwrt = (data as any).etwtwrt;
+    }
+    
+    setData(newData);
     setFormatType("OCA");
     setActiveEditorJSON(convertedSpec);
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
-    
-    // Update data model to match the OCA structure
-    const defaultData = createDefaultDataFromSchema(procivisSpec);
-    setData(defaultData);
     
     toast({
       title: "Format converted",
       description: "Successfully converted from Procivis One to OCA format",
     });
+    
+    setTimeout(() => {
+      extractOCADataStructure();
+    }, 50);
   };
   
   const handleConvertToProcivisOne = () => {
     const convertedSpec = convertOCAToProcivisOne(specification);
     setProcivisSpec(convertedSpec);
+    
+    const newData = createDefaultDataFromSchema(convertedSpec);
+    
+    if (data.firstname) newData.firstname = data.firstname;
+    if (data.lastname) newData.lastname = data.lastname;
+    if (data.address?.street) newData.address.street = data.address.street;
+    if (data.address?.city) newData.address.city = data.address.city;
+    if (data.address?.country) newData.address.country = data.address.country;
+    
+    if ((data as any).etwtwrt) {
+      (newData as any).etwtwrt = (data as any).etwtwrt;
+    }
+    
+    setData(newData);
     setFormatType("ProcivisOne");
     setActiveEditorJSON(convertedSpec);
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
@@ -224,6 +251,10 @@ const TranslationDashboard = () => {
       title: "Format converted",
       description: "Successfully converted from OCA to Procivis One format",
     });
+    
+    setTimeout(() => {
+      extractProcivisOneDataStructure();
+    }, 50);
   };
   
   const handleCloseJsonOutput = () => {

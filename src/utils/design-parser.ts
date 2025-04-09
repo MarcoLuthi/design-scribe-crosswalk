@@ -55,10 +55,25 @@ export function getAttributeLabel(specification: DesignSpecification, baseId: st
 }
 
 export function formatPrimaryField(template: string, data: OwnerData): string {
-  return template.replace(/{{(\w+)}}/g, (match, key) => {
-    if (key === 'firstname') return data.firstname;
-    if (key === 'lastname') return data.lastname;
-    if (key === 'address_country') return data.address.country;
-    return match;
+  if (!template) return "";
+  
+  // First process any nested properties like address.country
+  const processedTemplate = template.replace(/{{(\w+)\.(\w+)}}/g, (match, obj, prop) => {
+    if (obj === 'address' && data.address && data.address[prop as keyof typeof data.address]) {
+      return data.address[prop as keyof typeof data.address];
+    }
+    return match; // Return unmodified if not found
+  });
+  
+  // Then process simple properties
+  return processedTemplate.replace(/{{(\w+)}}/g, (match, key) => {
+    if (key === 'firstname' && data.firstname) return data.firstname;
+    if (key === 'lastname' && data.lastname) return data.lastname;
+    if (key in data) {
+      const value = data[key as keyof typeof data];
+      // Only return if it's a string value
+      if (typeof value === 'string') return value;
+    }
+    return match; // Return unmodified if not found
   });
 }

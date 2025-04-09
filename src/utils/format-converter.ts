@@ -271,7 +271,15 @@ export function createDefaultDataFromSchema(schema: ProcivisOneSchema): OwnerDat
       });
     } else {
       // Handle simple properties
-      (data as any)[key] = "";
+      // Make sure we're only assigning string values to string properties
+      if (claim.datatype === "STRING") {
+        // Special handling for well-known attributes
+        if (key === "firstname" || key === "lastname" || 
+            key === "etwtwrt" || key === "id" || 
+            typeof (data as any)[key] === 'string') {
+          (data as any)[key] = "";
+        }
+      }
     }
   });
   
@@ -310,13 +318,16 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
   let secondaryText = '';
   
   // Get primary attribute value if it exists in data
-  if (primaryAttr.toLowerCase() === "firstname") {
+  if (primaryAttr && primaryAttr.toLowerCase() === "firstname") {
     primaryText = data?.firstname || '';
-  } else if (primaryAttr.toLowerCase() === "lastname") {
+  } else if (primaryAttr && primaryAttr.toLowerCase() === "lastname") {
     primaryText = data?.lastname || '';
-  } else if (data) {
+  } else if (primaryAttr && primaryAttr.toLowerCase() === "etwtwrt") {
+    primaryText = data?.etwtwrt || '';
+  } else if (data && primaryAttr) {
     // Try to find the attribute in the data object
-    const potentialValue = data[primaryAttr.toLowerCase() as keyof typeof data];
+    const key = primaryAttr.toLowerCase();
+    const potentialValue = (data as any)[key];
     
     // Only use the value if it's a string
     if (typeof potentialValue === 'string') {
@@ -330,9 +341,12 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
       secondaryText = data?.firstname || '';
     } else if (secondaryAttr.toLowerCase() === "lastname") {
       secondaryText = data?.lastname || '';
+    } else if (secondaryAttr.toLowerCase() === "etwtwrt") {
+      secondaryText = data?.etwtwrt || '';
     } else if (data) {
       // Try to find the attribute in the data object
-      const potentialValue = data[secondaryAttr.toLowerCase() as keyof typeof data];
+      const key = secondaryAttr.toLowerCase();
+      const potentialValue = (data as any)[key];
       
       // Only use the value if it's a string
       if (typeof potentialValue === 'string') {

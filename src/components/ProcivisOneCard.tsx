@@ -84,7 +84,7 @@ const ProcivisOneCard = ({
   const hasSecondaryText = secondaryText && secondaryText.trim() !== "";
 
   return (
-    <div className="w-full max-w-xl shadow-lg rounded-2xl overflow-hidden bg-slate-50">
+    <div className="w-[360px] shadow-lg rounded-2xl overflow-hidden bg-slate-50">
       {/* Header section with logo/avatar and title */}
       <div className="p-4 flex items-center gap-4">
         <div 
@@ -121,8 +121,8 @@ const ProcivisOneCard = ({
         </div>
       </div>
       
-      {/* Main card body with aspect ratio */}
-      <AspectRatio ratio={1.64} className="w-full">
+      {/* Main card body with fixed height */}
+      <div className="w-full h-[200px]">
         <div
           className="w-full h-full"
           style={
@@ -133,7 +133,7 @@ const ProcivisOneCard = ({
         >
           {/* Card content would go here */}
         </div>
-      </AspectRatio>
+      </div>
     </div>
   );
 };
