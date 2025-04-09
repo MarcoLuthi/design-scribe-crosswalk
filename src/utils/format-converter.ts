@@ -1,3 +1,4 @@
+
 import { DesignSpecification, OwnerData } from "../types/design-spec";
 import { ProcivisOneSchema, ProcivisOneClaim } from "../types/procivis-one-spec";
 import { getBrandingOverlay, getMetaOverlay, getLabelOverlays } from "./design-parser";
@@ -247,18 +248,24 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
     primaryText = data.firstname;
   } else if (primaryAttr.toLowerCase() === "lastname") {
     primaryText = data.lastname;
+  } else {
+    // Try to find the attribute in the data object
+    primaryText = data[primaryAttr.toLowerCase()] || primaryText;
   }
   
   if (secondaryAttr?.toLowerCase() === "firstname") {
     secondaryText = data.firstname;
   } else if (secondaryAttr?.toLowerCase() === "lastname") {
     secondaryText = data.lastname;
+  } else if (secondaryAttr) {
+    // Try to find the attribute in the data object
+    secondaryText = data[secondaryAttr.toLowerCase()] || secondaryText;
   }
   
   // Extract background image if available
   const backgroundImage = schema.layoutProperties.background?.image;
   
-  // Extract logo font color and background color
+  // Extract logo details with proper defaults
   const logoFontColor = schema.layoutProperties.logo?.fontColor || '#fff';
   const logoBackgroundColor = schema.layoutProperties.logo?.backgroundColor || schema.layoutProperties.background?.color || '#2C75E3';
   
@@ -268,7 +275,7 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
     secondaryText,
     backgroundColor: schema.layoutProperties.background?.color || '#2C75E3',
     backgroundImage,
-    logo: schema.layoutProperties.logo?.image,
+    logo: schema.layoutProperties.logo?.image || '',
     logoFontColor,
     logoBackgroundColor
   };

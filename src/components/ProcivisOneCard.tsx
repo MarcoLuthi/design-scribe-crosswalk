@@ -43,8 +43,11 @@ const ProcivisOneCard = ({
             />
           ) : (
             <AvatarFallback 
-              className="text-xl font-bold"
-              style={{ color: logoFontColor, backgroundColor: logoBackgroundColor }}
+              className="text-xl font-bold rounded-md"
+              style={{ 
+                color: logoFontColor,
+                backgroundColor: logoBackgroundColor 
+              }}
             >
               {firstLetter}
             </AvatarFallback>
