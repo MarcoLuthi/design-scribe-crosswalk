@@ -102,34 +102,6 @@ const TranslationDashboard = () => {
         </div>
       </div>
       
-      {/* Converted JSON Output */}
-      {convertedJson && (
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Converted {formatType} Format</CardTitle>
-                <CardDescription>
-                  JSON representation of the converted format
-                </CardDescription>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handleCloseJsonOutput}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-80 overflow-y-auto whitespace-pre">
-              {convertedJson}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left side: Configuration */}
         <Tabs defaultValue="specification" className="space-y-4">
@@ -283,6 +255,36 @@ const TranslationDashboard = () => {
           )}
         </div>
       </div>
+      
+      {/* Converted JSON Output - now moved below the previews */}
+      {convertedJson && (
+        <div className="mt-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Converted {formatType} Format</CardTitle>
+                  <CardDescription>
+                    JSON representation of the converted format
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleCloseJsonOutput}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-80 overflow-y-auto whitespace-pre">
+                {convertedJson}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
