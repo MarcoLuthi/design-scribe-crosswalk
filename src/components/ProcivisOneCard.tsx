@@ -7,6 +7,7 @@ interface ProcivisOneCardProps {
   primaryText: string;
   secondaryText: string;
   backgroundColor: string;
+  backgroundImage?: string;
   logo?: string;
 }
 
@@ -15,6 +16,7 @@ const ProcivisOneCard = ({
   primaryText,
   secondaryText,
   backgroundColor,
+  backgroundImage,
   logo
 }: ProcivisOneCardProps) => {
   return (
@@ -47,7 +49,11 @@ const ProcivisOneCard = ({
       <AspectRatio ratio={16/8} className="w-full">
         <div
           className="w-full h-full"
-          style={{ backgroundColor }}
+          style={
+            backgroundImage 
+              ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              : { backgroundColor }
+          }
         >
           {/* Content would go here */}
         </div>

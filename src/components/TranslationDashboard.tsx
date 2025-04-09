@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,25 +25,20 @@ const TranslationDashboard = () => {
   const [convertedJson, setConvertedJson] = useState<string | null>(null);
   const [activeEditorJSON, setActiveEditorJSON] = useState<object>(defaultSpecification);
   
-  // Extract branding and meta information for OCA format
   const brandingOverlay = getBrandingOverlay(specification);
   const metaOverlay = getMetaOverlay(specification);
   
-  // Format the primary field with the data for OCA
   const primaryField = brandingOverlay 
     ? formatPrimaryField(brandingOverlay.primary_field, data)
     : "";
   
-  // Format the preview data for Procivis One
   const procivisPreview = formatProcivisOnePreview(procivisSpec, data);
   
   const handleFormatToggle = (newFormat: FormatType) => {
     if (newFormat === formatType) return;
     
     setFormatType(newFormat);
-    // Update the active editor JSON to show the correct format
     setActiveEditorJSON(newFormat === "OCA" ? specification : procivisSpec);
-    // Clear any previously converted JSON
     setConvertedJson(null);
   };
   
@@ -52,19 +46,14 @@ const TranslationDashboard = () => {
     if (formatType === "OCA") {
       const typedSpec = newSpec as DesignSpecification;
       setSpecification(typedSpec);
-      // Update the active editor JSON
       setActiveEditorJSON(typedSpec);
-      // Update the Procivis spec to match the new OCA spec
       setProcivisSpec(convertOCAToProcivisOne(typedSpec));
     } else {
       const typedSpec = newSpec as ProcivisOneSchema;
       setProcivisSpec(typedSpec);
-      // Update the active editor JSON
       setActiveEditorJSON(typedSpec);
-      // Convert the Procivis spec to OCA format
       setSpecification(convertProcivisOneToOCA(typedSpec));
     }
-    // Clear any previously converted JSON
     setConvertedJson(null);
   };
   
@@ -72,9 +61,7 @@ const TranslationDashboard = () => {
     const convertedSpec = convertProcivisOneToOCA(procivisSpec);
     setSpecification(convertedSpec);
     setFormatType("OCA");
-    // Update the active editor JSON to the converted format
     setActiveEditorJSON(convertedSpec);
-    // Set the converted JSON text
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
   };
   
@@ -82,9 +69,7 @@ const TranslationDashboard = () => {
     const convertedSpec = convertOCAToProcivisOne(specification);
     setProcivisSpec(convertedSpec);
     setFormatType("ProcivisOne");
-    // Update the active editor JSON to the converted format
     setActiveEditorJSON(convertedSpec);
-    // Set the converted JSON text
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
   };
   
@@ -199,6 +184,11 @@ const TranslationDashboard = () => {
                       <CardTitle>Procivis One Preview</CardTitle>
                       <CardDescription>
                         Visualization of the Procivis One format
+                        {!procivisPreview.backgroundImage && (
+                          <span className="block text-xs text-amber-600 mt-1">
+                            Note: Procivis One supports background images, but none is specified in this schema
+                          </span>
+                        )}
                       </CardDescription>
                     </div>
                     <Button 
@@ -218,6 +208,7 @@ const TranslationDashboard = () => {
                     primaryText={procivisPreview.primaryText}
                     secondaryText={procivisPreview.secondaryText}
                     backgroundColor={procivisPreview.backgroundColor}
+                    backgroundImage={procivisPreview.backgroundImage}
                     logo={procivisPreview.logo}
                   />
                 </CardContent>
@@ -231,6 +222,11 @@ const TranslationDashboard = () => {
                     <CardTitle>Preview</CardTitle>
                     <CardDescription>
                       Visualization of the design based on the specification and data
+                      {formatType === "ProcivisOne" && !procivisPreview.backgroundImage && (
+                        <span className="block text-xs text-amber-600 mt-1">
+                          Note: Procivis One supports background images, but none is specified in this schema
+                        </span>
+                      )}
                     </CardDescription>
                   </div>
                   <Button 
@@ -259,6 +255,7 @@ const TranslationDashboard = () => {
                     primaryText={procivisPreview.primaryText}
                     secondaryText={procivisPreview.secondaryText}
                     backgroundColor={procivisPreview.backgroundColor}
+                    backgroundImage={procivisPreview.backgroundImage}
                     logo={procivisPreview.logo}
                   />
                 )}

@@ -12,6 +12,7 @@ export interface ProcivisOneClaim {
 
 export interface ProcivisOneBackground {
   color: string;
+  image?: string;
 }
 
 export interface ProcivisOneLogo {

@@ -1,4 +1,3 @@
-
 import { DesignSpecification, OwnerData } from "../types/design-spec";
 import { ProcivisOneSchema, ProcivisOneClaim } from "../types/procivis-one-spec";
 import { getBrandingOverlay, getMetaOverlay, getLabelOverlays } from "./design-parser";
@@ -218,6 +217,7 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
   primaryText: string;
   secondaryText: string;
   backgroundColor: string;
+  backgroundImage?: string;
   logo?: string;
 } {
   // Add null checks for schema and its properties
@@ -251,11 +251,15 @@ export function formatProcivisOnePreview(schema: ProcivisOneSchema, data: OwnerD
     secondaryText = data.lastname;
   }
   
+  // Extract background image if available
+  const backgroundImage = schema.layoutProperties.background?.image;
+  
   return {
     title: schema.name || 'Untitled',
     primaryText,
     secondaryText,
     backgroundColor: schema.layoutProperties.background?.color || '#2C75E3',
+    backgroundImage,
     logo: schema.layoutProperties.logo?.image
   };
 }
