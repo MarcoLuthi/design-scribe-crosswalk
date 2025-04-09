@@ -1,4 +1,5 @@
 
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Check } from "lucide-react";
 
 interface ProcivisOneCardProps {
@@ -17,33 +18,40 @@ const ProcivisOneCard = ({
   logo
 }: ProcivisOneCardProps) => {
   return (
-    <div className="w-full max-w-md shadow-lg rounded-2xl overflow-hidden">
+    <div className="w-full max-w-md shadow-lg rounded-2xl overflow-hidden bg-slate-50">
       {/* Header section with logo and title */}
-      <div className="bg-gray-100 p-4">
-        <div className="flex items-center">
-          {logo && (
-            <div className="mr-4 rounded-md overflow-hidden" style={{ backgroundColor }}>
-              <img src={logo} alt="Logo" className="w-12 h-12" />
-            </div>
-          )}
-          <div>
-            <h2 className="text-xl font-semibold">{title}</h2>
-            <div className="flex items-center gap-2 text-gray-700">
-              <span>{primaryText}</span>
-              <span className="font-bold">•</span>
-              <span>{secondaryText}</span>
-            </div>
+      <div className="p-4 flex items-center gap-4">
+        {logo && (
+          <div 
+            className="w-16 h-16 rounded-md overflow-hidden flex items-center justify-center" 
+            style={{ backgroundColor }}
+          >
+            <img 
+              src={logo} 
+              alt="Logo" 
+              className="w-10 h-10 object-contain"
+            />
+          </div>
+        )}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+          <div className="flex items-center gap-2 text-gray-600">
+            <span className="text-base">{primaryText}</span>
+            <span className="text-sm">•</span>
+            <span className="text-base">{secondaryText}</span>
           </div>
         </div>
       </div>
       
-      {/* Main card body */}
-      <div
-        className="p-8 flex flex-col min-h-[300px] relative"
-        style={{ backgroundColor }}
-      >
-        {/* Content would go here */}
-      </div>
+      {/* Main card body with aspect ratio */}
+      <AspectRatio ratio={16/8} className="w-full">
+        <div
+          className="w-full h-full"
+          style={{ backgroundColor }}
+        >
+          {/* Content would go here */}
+        </div>
+      </AspectRatio>
     </div>
   );
 };
