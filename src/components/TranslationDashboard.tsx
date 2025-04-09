@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { ProcivisOneSchema } from "@/types/procivis-one-spec";
 import { convertOCAToProcivisOne, convertProcivisOneToOCA, formatProcivisOnePreview } from "@/utils/format-converter";
 import { Button } from "@/components/ui/button";
 import ProcivisOneCard from "./ProcivisOneCard";
-import { ArrowLeftRight, RefreshCw, X } from "lucide-react";
+import { ArrowLeftRight, X } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type FormatType = "OCA" | "ProcivisOne";
@@ -96,10 +97,13 @@ const TranslationDashboard = () => {
       <h1 className="text-3xl font-bold mb-4">Design Translation Tool</h1>
       
       <div className="mb-6 flex justify-between items-center">
-        <ToggleGroup type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
-          <ToggleGroupItem value="OCA">OCA Format</ToggleGroupItem>
-          <ToggleGroupItem value="ProcivisOne">Procivis One Format</ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground">Design Basis:</span>
+          <ToggleGroup type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
+            <ToggleGroupItem value="OCA">OCA Format</ToggleGroupItem>
+            <ToggleGroupItem value="ProcivisOne">Procivis One Format</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
         
         <div className="flex gap-2">
           <Button 
