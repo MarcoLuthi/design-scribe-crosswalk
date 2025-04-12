@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,6 +114,51 @@ const TranslationDashboard = () => {
       arrays: {}
     };
     
+    if (!Object.keys(data).length) {
+      structure.simple['root'] = ['firstname', 'lastname'];
+      if (data.address) {
+        structure.simple['address'] = ['street', 'city', 'country'];
+      } else {
+        structure.simple['address'] = ['street', 'city', 'country'];
+      }
+      
+      if (Array.isArray(data.pets) && data.pets.length) {
+        structure.arrays['pets'] = { fields: ['name', 'race'] };
+      } else {
+        structure.arrays['pets'] = { fields: ['name', 'race'] };
+      }
+      
+      setDataStructure(structure);
+      return;
+    }
+    
+    if (data.firstname !== undefined && !structure.simple['root']?.includes('firstname')) {
+      if (!structure.simple['root']) structure.simple['root'] = [];
+      structure.simple['root'].push('firstname');
+    }
+    
+    if (data.lastname !== undefined && !structure.simple['root']?.includes('lastname')) {
+      if (!structure.simple['root']) structure.simple['root'] = [];
+      structure.simple['root'].push('lastname');
+    }
+    
+    if (data.address) {
+      structure.simple['address'] = [];
+      for (const key in data.address) {
+        structure.simple['address'].push(key);
+      }
+    }
+    
+    if (Array.isArray(data.pets) && data.pets.length > 0) {
+      structure.arrays['pets'] = { fields: [] };
+      const firstPet = data.pets[0];
+      for (const key in firstPet) {
+        structure.arrays['pets'].fields.push(key);
+      }
+    } else if (!structure.arrays['pets']) {
+      structure.arrays['pets'] = { fields: ['name', 'race'] };
+    }
+    
     const dataSourceOverlays = getDataSourceOverlays(specification);
     
     dataSourceOverlays.forEach(overlay => {
@@ -163,6 +207,12 @@ const TranslationDashboard = () => {
         }
       });
     });
+    
+    if (Object.keys(structure.simple).length === 0 && Object.keys(structure.arrays).length === 0) {
+      structure.simple['root'] = ['firstname', 'lastname'];
+      structure.simple['address'] = ['street', 'city', 'country'];
+      structure.arrays['pets'] = { fields: ['name', 'race'] };
+    }
     
     setDataStructure(structure);
   };
@@ -478,6 +528,9 @@ const TranslationDashboard = () => {
   };
   
   const renderDataEditor = () => {
+    console.log("Rendering data editor with structure:", dataStructure);
+    console.log("Current data:", data);
+    
     return (
       <div className="space-y-6">
         {Object.entries(dataStructure.simple).map(([group, fields]) => {
@@ -532,7 +585,7 @@ const TranslationDashboard = () => {
                 </Button>
               </div>
               
-              {items.length > 0 ? (
+              {items && items.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
