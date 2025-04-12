@@ -16,12 +16,14 @@ import {
 } from "@/utils/format-converter";
 import { Button } from "@/components/ui/button";
 import ProcivisOneCard from "./ProcivisOneCard";
-import { ArrowLeftRight, X, PlusCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeftRight, X, PlusCircle, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type FormatType = "OCA" | "ProcivisOne";
+type LanguageOption = "en" | "de" | "fr" | "it";
 
 const TranslationDashboard = () => {
   const [specification, setSpecification] = useState<DesignSpecification>(defaultSpecification);
@@ -38,6 +40,8 @@ const TranslationDashboard = () => {
     simple: {},
     arrays: {}
   });
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>("en");
+  const [isCopied, setIsCopied] = useState(false);
   
   const { toast } = useToast();
   const brandingOverlay = getBrandingOverlay(specification);
@@ -260,6 +264,22 @@ const TranslationDashboard = () => {
     setConvertedJson(null);
   };
   
+  const handleCopyJson = () => {
+    if (convertedJson) {
+      navigator.clipboard.writeText(convertedJson);
+      setIsCopied(true);
+      
+      toast({
+        title: "Copied to clipboard",
+        description: "The JSON has been copied to your clipboard",
+      });
+      
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    }
+  };
+  
   const getNestedValue = (obj: any, path: string) => {
     const parts = path.split('.');
     let current = obj;
@@ -462,6 +482,13 @@ const TranslationDashboard = () => {
     );
   };
   
+  const languageOptions: { value: LanguageOption; label: string }[] = [
+    { value: "en", label: "English" },
+    { value: "de", label: "German" },
+    { value: "fr", label: "French" },
+    { value: "it", label: "Italian" },
+  ];
+  
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-4">Design Translation Tool</h1>
@@ -544,15 +571,31 @@ const TranslationDashboard = () => {
                     )}
                   </CardDescription>
                 </div>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={formatType === "OCA" ? handleConvertToProcivisOne : handleConvertToOCA}
-                  title={formatType === "OCA" ? "Convert to Procivis One" : "Convert to OCA"}
-                >
-                  <ArrowLeftRight className="h-4 w-4 mr-2" />
-                  {formatType === "OCA" ? "To Procivis One" : "To OCA"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  {formatType === "OCA" && (
+                    <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as LanguageOption)}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {languageOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    onClick={formatType === "OCA" ? handleConvertToProcivisOne : handleConvertToOCA}
+                    title={formatType === "OCA" ? "Convert to Procivis One" : "Convert to OCA"}
+                  >
+                    <ArrowLeftRight className="h-4 w-4 mr-2" />
+                    {formatType === "OCA" ? "To Procivis One" : "To OCA"}
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="flex justify-center p-6">
@@ -563,6 +606,7 @@ const TranslationDashboard = () => {
                   backgroundColor={brandingOverlay?.primary_background_color || "#2C75E3"}
                   logo={brandingOverlay?.logo}
                   data={data}
+                  language={selectedLanguage}
                 />
               ) : (
                 <ProcivisOneCard
@@ -592,13 +636,24 @@ const TranslationDashboard = () => {
                     JSON representation of the converted format
                   </CardDescription>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={handleCloseJsonOutput}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="secondary" 
+                    size="icon"
+                    onClick={handleCopyJson}
+                    className="h-9 w-9"
+                  >
+                    {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={handleCloseJsonOutput}
+                    className="h-9 w-9"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
