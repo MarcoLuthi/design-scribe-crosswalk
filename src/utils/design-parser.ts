@@ -40,7 +40,13 @@ export function getDataSourceOverlays(specification: DesignSpecification): DataS
   ) as DataSourceOverlay[];
 }
 
-export function getLabelOverlays(specification: DesignSpecification): LabelOverlay[] {
+export function getLabelOverlays(specification: DesignSpecification, language?: string): LabelOverlay[] {
+  if (language) {
+    return specification.overlays.filter(
+      overlay => overlay.type === "spec/overlays/label/1.0" && 'language' in overlay && overlay.language === language
+    ) as LabelOverlay[];
+  }
+  
   return specification.overlays.filter(
     overlay => overlay.type === "spec/overlays/label/1.0"
   ) as LabelOverlay[];
@@ -68,8 +74,8 @@ export function getCaptureBaseById(specification: DesignSpecification, id: strin
   return specification.capture_bases.find(base => base.digest === id);
 }
 
-export function getAttributeLabel(specification: DesignSpecification, baseId: string, attributeName: string): string {
-  const labelOverlays = getLabelOverlays(specification);
+export function getAttributeLabel(specification: DesignSpecification, baseId: string, attributeName: string, language?: string): string {
+  const labelOverlays = getLabelOverlays(specification, language);
   for (const overlay of labelOverlays) {
     if (overlay.capture_base === baseId && overlay.attribute_labels[attributeName]) {
       return overlay.attribute_labels[attributeName];

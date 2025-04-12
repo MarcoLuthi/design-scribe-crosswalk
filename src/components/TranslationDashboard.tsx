@@ -5,7 +5,15 @@ import { defaultData, defaultSpecification } from "@/data/default-specification"
 import { defaultProcivisOneSchema } from "@/data/default-procivis-spec";
 import JsonEditor from "./JsonEditor";
 import PetPermit from "./PetPermit";
-import { formatPrimaryField, getBrandingOverlay, getMetaOverlay, getDataSourceOverlays, getAvailableLanguages } from "@/utils/design-parser";
+import { 
+  formatPrimaryField, 
+  getBrandingOverlay, 
+  getMetaOverlay, 
+  getDataSourceOverlays, 
+  getAvailableLanguages,
+  getAttributeLabel,
+  getLabelOverlays
+} from "@/utils/design-parser";
 import { DesignSpecification, OwnerData, PetData } from "@/types/design-spec";
 import { ProcivisOneSchema } from "@/types/procivis-one-spec";
 import { 
@@ -46,6 +54,7 @@ const TranslationDashboard = () => {
   const { toast } = useToast();
   const brandingOverlay = getBrandingOverlay(specification, selectedLanguage);
   const metaOverlay = getMetaOverlay(specification, selectedLanguage);
+  const labelOverlays = getLabelOverlays(specification, selectedLanguage);
   
   const primaryField = brandingOverlay 
     ? formatPrimaryField(brandingOverlay.primary_field, data)
@@ -415,13 +424,74 @@ const TranslationDashboard = () => {
     setData(newData as OwnerData);
   };
   
+  const getLocalizedFieldLabel = (field: string, group: string): string => {
+    if (formatType !== "OCA") {
+      return field.charAt(0).toUpperCase() + field.slice(1);
+    }
+    
+    let captureBaseId = "";
+    specification.capture_bases.forEach(base => {
+      if (base.digest === "IH9w8JN_ZE4maSfcs27R33JdV_ClH7jilM9mnlS9j_0j") {
+        if (group === "root" || group === "address") {
+          captureBaseId = base.digest;
+        }
+      }
+      else if (base.digest === "IKLvtGx1NU0007DUTTmI_6Zw-hnGRFicZ5R4vAxg4j2j") {
+        if (group === "pets") {
+          captureBaseId = base.digest;
+        }
+      }
+    });
+    
+    if (!captureBaseId) return field.charAt(0).toUpperCase() + field.slice(1);
+    
+    const dataSourceOverlays = getDataSourceOverlays(specification);
+    let attributeName = field;
+    
+    for (const overlay of dataSourceOverlays) {
+      if (overlay.capture_base === captureBaseId) {
+        for (const [attr, path] of Object.entries(overlay.attribute_sources)) {
+          const sourcePath = path as string;
+          if (sourcePath === `$.${field}` || 
+              sourcePath === `$.${group}.${field}` ||
+              sourcePath === `$.pets[*].${field}`) {
+            attributeName = attr;
+            break;
+          }
+        }
+      }
+    }
+    
+    return getAttributeLabel(specification, captureBaseId, attributeName, selectedLanguage);
+  };
+  
+  const getLocalizedGroupLabel = (group: string): string => {
+    if (group === 'root') return 'General Information';
+    
+    if (formatType === "OCA") {
+      const clusterOrderings = specification.overlays.filter(
+        overlay => overlay.type === "extend/overlays/cluster_ordering/1.0" && 
+                  'language' in overlay && 
+                  overlay.language === selectedLanguage
+      );
+      
+      for (const overlay of clusterOrderings) {
+        if ('cluster_labels' in overlay && overlay.cluster_labels[group]) {
+          return overlay.cluster_labels[group];
+        }
+      }
+    }
+    
+    return group.charAt(0).toUpperCase() + group.slice(1);
+  };
+  
   const renderDataEditor = () => {
     return (
       <div className="space-y-6">
         {Object.entries(dataStructure.simple).map(([group, fields]) => {
           if (fields.length === 0) return null;
           
-          const groupLabel = group === 'root' ? 'General Information' : group.charAt(0).toUpperCase() + group.slice(1);
+          const groupLabel = getLocalizedGroupLabel(group);
           
           return (
             <div key={group} className="space-y-4">
@@ -430,11 +500,12 @@ const TranslationDashboard = () => {
                 {fields.map(field => {
                   const fieldPath = group === 'root' ? field : `${group}.${field}`;
                   const fieldValue = getNestedValue(data, fieldPath);
+                  const fieldLabel = getLocalizedFieldLabel(field, group);
                   
                   return (
                     <div key={fieldPath} className="grid grid-cols-3 items-center gap-4">
-                      <label className="text-sm font-medium text-right capitalize">
-                        {field}:
+                      <label className="text-sm font-medium text-right">
+                        {fieldLabel}:
                       </label>
                       <input
                         type="text"
@@ -452,18 +523,20 @@ const TranslationDashboard = () => {
         
         {Object.entries(dataStructure.arrays).map(([arrayName, arrayConfig]) => {
           const items = data[arrayName as keyof typeof data] as any[] || [];
+          const arrayLabel = getLocalizedGroupLabel(arrayName);
+          const singularArrayName = arrayName.slice(0, -1);
           
           return (
             <div key={arrayName} className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-medium capitalize">{arrayName}</h3>
+                <h3 className="text-base font-medium">{arrayLabel}</h3>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => addArrayItem(arrayName)}
                 >
                   <PlusCircle className="h-4 w-4 mr-1" />
-                  Add {arrayName.slice(0, -1)}
+                  Add {singularArrayName}
                 </Button>
               </div>
               
@@ -472,7 +545,9 @@ const TranslationDashboard = () => {
                   <TableHeader>
                     <TableRow>
                       {arrayConfig.fields.map(field => (
-                        <TableHead key={field} className="capitalize">{field}</TableHead>
+                        <TableHead key={field}>
+                          {getLocalizedFieldLabel(field, arrayName)}
+                        </TableHead>
                       ))}
                       <TableHead className="w-20">Actions</TableHead>
                     </TableRow>
@@ -506,7 +581,7 @@ const TranslationDashboard = () => {
                 </Table>
               ) : (
                 <div className="text-center p-4 border border-dashed rounded-md text-muted-foreground">
-                  No {arrayName} added yet. Click "Add {arrayName.slice(0, -1)}" to add one.
+                  No {arrayName} added yet. Click "Add {singularArrayName}" to add one.
                 </div>
               )}
             </div>
