@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -686,8 +687,8 @@ const TranslationDashboard = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex justify-center items-center p-6 overflow-auto">
-            <div className="transform scale-[0.95] origin-center">
+          <CardContent className="flex-1 p-6 overflow-auto flex justify-center items-center">
+            <div className="w-full flex justify-center items-center">
               {formatType === "OCA" ? (
                 <PetPermit
                   title={metaOverlay?.name || "SWIYU"}
@@ -696,6 +697,7 @@ const TranslationDashboard = () => {
                   logo={brandingOverlay?.logo}
                   data={data}
                   language={selectedLanguage}
+                  className="w-full"
                 />
               ) : (
                 <ProcivisOneCard

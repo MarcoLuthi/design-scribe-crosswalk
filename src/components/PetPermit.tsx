@@ -11,6 +11,7 @@ interface PetPermitProps {
   logo?: string;
   data: OwnerData;
   language?: "en" | "de" | "fr" | "it";
+  className?: string;
 }
 
 const PetPermit = ({
@@ -19,14 +20,15 @@ const PetPermit = ({
   backgroundColor,
   logo,
   data,
-  language = "en"
+  language = "en",
+  className
 }: PetPermitProps) => {
   // Format the primary field template with the actual data
   const formattedPrimaryField = formatPrimaryField(primaryField, data);
   
   return (
     <div 
-      className="w-full max-w-md rounded-3xl overflow-hidden shadow-lg"
+      className={cn("w-full max-w-full rounded-3xl overflow-hidden shadow-lg", className)}
       style={{ backgroundColor }}
     >
       <div className="p-8 flex flex-col min-h-[600px] relative">
