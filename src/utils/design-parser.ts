@@ -40,6 +40,18 @@ export function getClusterOrderingOverlays(specification: DesignSpecification): 
   ) as ClusterOrderingOverlay[];
 }
 
+export function getAvailableLanguages(specification: DesignSpecification): string[] {
+  const languages = new Set<string>();
+  
+  specification.overlays.forEach(overlay => {
+    if ('language' in overlay && typeof overlay.language === 'string') {
+      languages.add(overlay.language);
+    }
+  });
+  
+  return Array.from(languages);
+}
+
 export function getCaptureBaseById(specification: DesignSpecification, id: string): CaptureBase | undefined {
   return specification.capture_bases.find(base => base.digest === id);
 }

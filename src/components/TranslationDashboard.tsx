@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +52,45 @@ const TranslationDashboard = () => {
     : "";
   
   const procivisPreview = formatProcivisOnePreview(procivisSpec, data);
+  
+  const availableLanguages = useMemo(() => {
+    if (formatType !== "OCA") return [{ value: "en", label: "English" }];
+    
+    const availableLangs = new Set<string>();
+    
+    specification.overlays.forEach(overlay => {
+      if ('language' in overlay && overlay.language) {
+        availableLangs.add(overlay.language);
+      }
+    });
+    
+    if (availableLangs.size === 0) {
+      availableLangs.add("en");
+    }
+    
+    return Array.from(availableLangs).map(lang => {
+      const labelMap: Record<string, string> = {
+        "en": "English",
+        "de": "German",
+        "fr": "French",
+        "it": "Italian"
+      };
+      
+      return {
+        value: lang as LanguageOption,
+        label: labelMap[lang] || lang
+      };
+    });
+  }, [specification, formatType]);
+  
+  useEffect(() => {
+    if (availableLanguages.length > 0) {
+      const defaultLang = availableLanguages.find(lang => lang.value === selectedLanguage);
+      if (!defaultLang) {
+        setSelectedLanguage(availableLanguages[0].value);
+      }
+    }
+  }, [availableLanguages]);
   
   useEffect(() => {
     if (formatType === "OCA") {
@@ -483,13 +521,6 @@ const TranslationDashboard = () => {
     );
   };
   
-  const languageOptions: { value: LanguageOption; label: string }[] = [
-    { value: "en", label: "English" },
-    { value: "de", label: "German" },
-    { value: "fr", label: "French" },
-    { value: "it", label: "Italian" },
-  ];
-  
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-4">Design Translation Tool</h1>
@@ -573,13 +604,13 @@ const TranslationDashboard = () => {
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  {formatType === "OCA" && (
+                  {formatType === "OCA" && availableLanguages.length > 0 && (
                     <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as LanguageOption)}>
                       <SelectTrigger className="w-[140px]">
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
                       <SelectContent>
-                        {languageOptions.map((option) => (
+                        {availableLanguages.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
