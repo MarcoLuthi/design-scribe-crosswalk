@@ -44,8 +44,8 @@ const TranslationDashboard = () => {
   const [isCopied, setIsCopied] = useState(false);
   
   const { toast } = useToast();
-  const brandingOverlay = getBrandingOverlay(specification);
-  const metaOverlay = getMetaOverlay(specification);
+  const brandingOverlay = getBrandingOverlay(specification, selectedLanguage);
+  const metaOverlay = getMetaOverlay(specification, selectedLanguage);
   
   const primaryField = brandingOverlay 
     ? formatPrimaryField(brandingOverlay.primary_field, data)
@@ -56,19 +56,13 @@ const TranslationDashboard = () => {
   const availableLanguages = useMemo(() => {
     if (formatType !== "OCA") return [{ value: "en" as LanguageOption, label: "English" }];
     
-    const availableLangs = new Set<string>();
+    const languages = getAvailableLanguages(specification);
     
-    specification.overlays.forEach(overlay => {
-      if ('language' in overlay && overlay.language) {
-        availableLangs.add(overlay.language);
-      }
-    });
-    
-    if (availableLangs.size === 0) {
-      availableLangs.add("en");
+    if (languages.length === 0) {
+      languages.push("en");
     }
     
-    return Array.from(availableLangs).map(lang => {
+    return languages.map(lang => {
       const labelMap: Record<string, string> = {
         "en": "English",
         "de": "German",
@@ -635,7 +629,7 @@ const TranslationDashboard = () => {
               {formatType === "OCA" ? (
                 <PetPermit
                   title={metaOverlay?.name || "SWIYU"}
-                  primaryField={primaryField}
+                  primaryField={brandingOverlay?.primary_field || ""}
                   backgroundColor={brandingOverlay?.primary_background_color || "#2C75E3"}
                   logo={brandingOverlay?.logo}
                   data={data}

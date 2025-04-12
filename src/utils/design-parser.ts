@@ -10,13 +10,25 @@ import {
   OwnerData
 } from "../types/design-spec";
 
-export function getBrandingOverlay(specification: DesignSpecification): BrandingOverlay | undefined {
+export function getBrandingOverlay(specification: DesignSpecification, language?: string): BrandingOverlay | undefined {
+  if (language) {
+    return specification.overlays.find(
+      overlay => overlay.type === "aries/overlays/branding/1.1" && 'language' in overlay && overlay.language === language
+    ) as BrandingOverlay | undefined;
+  }
+  
   return specification.overlays.find(
     overlay => overlay.type === "aries/overlays/branding/1.1"
   ) as BrandingOverlay | undefined;
 }
 
-export function getMetaOverlay(specification: DesignSpecification): MetaOverlay | undefined {
+export function getMetaOverlay(specification: DesignSpecification, language?: string): MetaOverlay | undefined {
+  if (language) {
+    return specification.overlays.find(
+      overlay => overlay.type === "spec/overlays/meta/1.0" && 'language' in overlay && overlay.language === language
+    ) as MetaOverlay | undefined;
+  }
+  
   return specification.overlays.find(
     overlay => overlay.type === "spec/overlays/meta/1.0"
   ) as MetaOverlay | undefined;

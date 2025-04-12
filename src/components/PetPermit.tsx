@@ -43,20 +43,15 @@ const PetPermit = ({
         {/* Primary Field */}
         <p className="text-white text-2xl mb-8">{formattedPrimaryField}</p>
         
-        {/* Language indicator (if needed) */}
-        {language !== "en" && (
-          <div className="mb-4">
-            <span className="text-white text-xs uppercase bg-white bg-opacity-20 px-2 py-1 rounded">
-              {language}
-            </span>
-          </div>
-        )}
-        
         {/* Bottom validation section */}
         <div className="mt-auto">
           <div className="inline-flex items-center gap-2 border-2 border-white text-white px-6 py-2 rounded-full">
             <Check className="w-5 h-5" />
-            <span className="text-xl">valid</span>
+            <span className="text-xl">
+              {language === "de" ? "gültig" : 
+               language === "fr" ? "valide" : 
+               language === "it" ? "valido" : "valid"}
+            </span>
           </div>
         </div>
       </div>
