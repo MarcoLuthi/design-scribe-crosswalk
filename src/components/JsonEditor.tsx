@@ -37,19 +37,19 @@ const JsonEditor = ({
   };
   
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="space-y-4">
       {label && (
-        <div className="mb-2 flex-none">
+        <div className="mb-2">
           <h3 className="text-base font-medium">{label}</h3>
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
       )}
       <Textarea
-        className={`font-mono ${height} text-sm flex-1 min-h-[200px]`}
+        className={`font-mono ${height} text-sm`}
         value={jsonText}
         onChange={(e) => setJsonText(e.target.value)}
       />
-      <Button className="flex-none" onClick={handleUpdate}>Update</Button>
+      <Button onClick={handleUpdate}>Update</Button>
     </div>
   );
 };

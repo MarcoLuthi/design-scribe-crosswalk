@@ -38,13 +38,6 @@
     /* Custom colors for our pet permit */
     --permit-blue: 217 71% 53%;
     --permit-white: 0 0% 100%;
-    
-    /* JSON Editor colors */
-    --json-string: 130 50% 40%;      /* Green for strings */
-    --json-number: 262 80% 50%;      /* Purple for numbers */
-    --json-boolean: 40 100% 50%;     /* Yellow for booleans */
-    --json-null: 0 0% 60%;           /* Gray for null */
-    --json-key: 210 90% 50%;         /* Blue for keys */
   }
 
   .dark {
@@ -75,13 +68,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    
-    /* JSON Editor colors - dark mode */
-    --json-string: 140 70% 60%;      /* Lighter green for strings */
-    --json-number: 262 80% 70%;      /* Lighter purple for numbers */
-    --json-boolean: 40 100% 60%;     /* Lighter yellow for booleans */
-    --json-null: 0 0% 70%;           /* Lighter gray for null */
-    --json-key: 210 90% 70%;         /* Lighter blue for keys */
   }
 }
 
@@ -94,48 +80,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* Syntax highlighting */
-.syntax-highlighted {
-  color: hsl(var(--foreground));
-}
-
-.syntax-highlighted .json-key {
-  color: hsl(var(--json-key));
-}
-
-.syntax-highlighted .json-string {
-  color: hsl(var(--json-string));
-}
-
-.syntax-highlighted .json-number {
-  color: hsl(var(--json-number));
-}
-
-.syntax-highlighted .json-boolean {
-  color: hsl(var(--json-boolean));
-}
-
-.syntax-highlighted .json-null {
-  color: hsl(var(--json-null));
-}
-
-/* Simple syntax highlighting for the JSON in the editor */
-pre.syntax-highlighted {
-  counter-reset: line;
-}
-
-pre.syntax-highlighted > code {
-  display: block;
-}
-
-/* JSON syntax highlighting directly in the convertedJson display */
-pre.syntax-highlighted {
-  line-height: 1.5;
-}
-
-pre.syntax-highlighted .string { color: hsl(var(--json-string)); }
-pre.syntax-highlighted .number { color: hsl(var(--json-number)); }
-pre.syntax-highlighted .boolean { color: hsl(var(--json-boolean)); }
-pre.syntax-highlighted .null { color: hsl(var(--json-null)); }
-pre.syntax-highlighted .key { color: hsl(var(--json-key)); }

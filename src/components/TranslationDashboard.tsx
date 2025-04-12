@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +12,7 @@ import {
   getDataSourceOverlays, 
   getAvailableLanguages,
   getAttributeLabel,
-  getLabelOverlays,
-  getClusterLabel
+  getLabelOverlays
 } from "@/utils/design-parser";
 import { DesignSpecification, OwnerData, PetData } from "@/types/design-spec";
 import { ProcivisOneSchema } from "@/types/procivis-one-spec";
@@ -31,10 +29,6 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
 
 type FormatType = "OCA" | "ProcivisOne";
 type LanguageOption = "en" | "de" | "fr" | "it";
@@ -111,7 +105,6 @@ const TranslationDashboard = () => {
   }, [specification, procivisSpec, formatType]);
   
   const extractOCADataStructure = () => {
-    console.log("Extracting data structure from OCA specification...");
     const structure: {
       simple: { [key: string]: string[] },
       arrays: { [key: string]: { fields: string[] } }
@@ -120,43 +113,6 @@ const TranslationDashboard = () => {
       arrays: {}
     };
     
-    // Initialize with default structure to ensure we always have something to show
-    structure.simple['root'] = ['firstname', 'lastname'];
-    structure.simple['address'] = ['street', 'city', 'country'];
-    structure.arrays['pets'] = { fields: ['name', 'race'] };
-    
-    // Extract from data if available
-    if (data && Object.keys(data).length > 0) {
-      // Extract root level properties
-      const rootProperties = Object.keys(data).filter(key => 
-        typeof data[key as keyof typeof data] !== 'object' && 
-        key !== 'pets' && 
-        key !== 'address'
-      );
-      
-      if (rootProperties.length > 0) {
-        structure.simple['root'] = rootProperties;
-      }
-      
-      // Extract address properties
-      if (data.address && typeof data.address === 'object') {
-        structure.simple['address'] = Object.keys(data.address);
-        if (structure.simple['address'].length === 0) {
-          structure.simple['address'] = ['street', 'city', 'country'];
-        }
-      }
-      
-      // Extract pet properties
-      if (Array.isArray(data.pets) && data.pets.length > 0) {
-        const firstPet = data.pets[0];
-        structure.arrays['pets'] = { fields: Object.keys(firstPet) };
-        if (structure.arrays['pets'].fields.length === 0) {
-          structure.arrays['pets'].fields = ['name', 'race'];
-        }
-      }
-    }
-    
-    // Extract from specification via data source overlays
     const dataSourceOverlays = getDataSourceOverlays(specification);
     
     dataSourceOverlays.forEach(overlay => {
@@ -206,17 +162,6 @@ const TranslationDashboard = () => {
       });
     });
     
-    // Ensure we have default pets fields if none were extracted
-    if (!structure.arrays['pets'] || structure.arrays['pets'].fields.length === 0) {
-      structure.arrays['pets'] = { fields: ['name', 'race'] };
-    }
-    
-    // Remove duplicates
-    Object.keys(structure.simple).forEach(key => {
-      structure.simple[key] = [...new Set(structure.simple[key])];
-    });
-    
-    console.log("Final data structure:", structure);
     setDataStructure(structure);
   };
   
@@ -524,37 +469,34 @@ const TranslationDashboard = () => {
     if (group === 'root') return 'General Information';
     
     if (formatType === "OCA") {
-      return getClusterLabel(specification, group, selectedLanguage);
+      const clusterOrderings = specification.overlays.filter(
+        overlay => overlay.type === "extend/overlays/cluster_ordering/1.0" && 
+                  'language' in overlay && 
+                  overlay.language === selectedLanguage
+      );
+      
+      for (const overlay of clusterOrderings) {
+        if ('cluster_labels' in overlay && overlay.cluster_labels[group]) {
+          return overlay.cluster_labels[group];
+        }
+      }
     }
     
     return group.charAt(0).toUpperCase() + group.slice(1);
   };
   
   const renderDataEditor = () => {
-    console.log("Rendering data editor with structure:", dataStructure);
-    console.log("Current data:", data);
-    
-    if (Object.keys(dataStructure.simple).length === 0 && Object.keys(dataStructure.arrays).length === 0) {
-      return (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center p-8 border border-dashed rounded-md text-muted-foreground">
-            No data structure detected. Please ensure your specification includes proper data source overlays.
-          </div>
-        </div>
-      );
-    }
-    
     return (
-      <div className="space-y-6 w-full">
+      <div className="space-y-6">
         {Object.entries(dataStructure.simple).map(([group, fields]) => {
           if (fields.length === 0) return null;
           
           const groupLabel = getLocalizedGroupLabel(group);
           
           return (
-            <div key={group} className="space-y-4 border p-4 rounded-md bg-white">
-              <h3 className="text-base font-medium border-b pb-2">{groupLabel}</h3>
-              <div className="grid gap-4">
+            <div key={group} className="space-y-4">
+              <h3 className="text-base font-medium">{groupLabel}</h3>
+              <div className="space-y-3">
                 {fields.map(field => {
                   const fieldPath = group === 'root' ? field : `${group}.${field}`;
                   const fieldValue = getNestedValue(data, fieldPath);
@@ -562,18 +504,15 @@ const TranslationDashboard = () => {
                   
                   return (
                     <div key={fieldPath} className="grid grid-cols-3 items-center gap-4">
-                      <Label htmlFor={`input-${fieldPath}`} className="text-sm font-medium text-right">
+                      <label className="text-sm font-medium text-right">
                         {fieldLabel}:
-                      </Label>
-                      <div className="col-span-2">
-                        <Input
-                          id={`input-${fieldPath}`}
-                          type="text"
-                          value={fieldValue || ""}
-                          onChange={(e) => updateDataField(fieldPath, e.target.value)}
-                          className="w-full border-gray-300"
-                        />
-                      </div>
+                      </label>
+                      <input
+                        type="text"
+                        className="col-span-2 px-3 py-2 border rounded-md"
+                        value={fieldValue || ""}
+                        onChange={(e) => updateDataField(fieldPath, e.target.value)}
+                      />
                     </div>
                   );
                 })}
@@ -585,11 +524,11 @@ const TranslationDashboard = () => {
         {Object.entries(dataStructure.arrays).map(([arrayName, arrayConfig]) => {
           const items = data[arrayName as keyof typeof data] as any[] || [];
           const arrayLabel = getLocalizedGroupLabel(arrayName);
-          const singularArrayName = arrayName.endsWith('s') ? arrayName.slice(0, -1) : `${arrayName} item`;
+          const singularArrayName = arrayName.slice(0, -1);
           
           return (
-            <div key={arrayName} className="space-y-4 border p-4 rounded-md bg-white">
-              <div className="flex items-center justify-between border-b pb-2">
+            <div key={arrayName} className="space-y-4">
+              <div className="flex items-center justify-between">
                 <h3 className="text-base font-medium">{arrayLabel}</h3>
                 <Button
                   variant="outline"
@@ -601,10 +540,10 @@ const TranslationDashboard = () => {
                 </Button>
               </div>
               
-              {items && items.length > 0 ? (
+              {items.length > 0 ? (
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gray-50">
+                    <TableRow>
                       {arrayConfig.fields.map(field => (
                         <TableHead key={field}>
                           {getLocalizedFieldLabel(field, arrayName)}
@@ -618,11 +557,11 @@ const TranslationDashboard = () => {
                       <TableRow key={index}>
                         {arrayConfig.fields.map(field => (
                           <TableCell key={field}>
-                            <Input
+                            <input
                               type="text"
+                              className="w-full px-2 py-1 border rounded-md"
                               value={item[field] || ""}
                               onChange={(e) => updateArrayItem(arrayName, index, field, e.target.value)}
-                              className="w-full border-gray-300"
                             />
                           </TableCell>
                         ))}
@@ -654,41 +593,48 @@ const TranslationDashboard = () => {
   
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Design Translation Tool</h1>
+      <h1 className="text-3xl font-bold mb-4">Design Translation Tool</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[700px]">
-        <Card className="flex flex-col h-full overflow-hidden">
-          <Tabs defaultValue="specification" className="flex flex-col h-full">
-            <CardHeader className="pb-2 flex-none">
-              <CardTitle className="text-xl">Design Configuration</CardTitle>
-              <CardDescription>
-                Edit the specification and test data for your design
-              </CardDescription>
-              <TabsList className="grid grid-cols-2 mt-4">
-                <TabsTrigger value="specification">Specification</TabsTrigger>
-                <TabsTrigger value="data">Data</TabsTrigger>
-              </TabsList>
-            </CardHeader>
-            
-            <CardContent className="flex-1 overflow-hidden p-0">
-              <TabsContent value="specification" className="h-full m-0 p-6 pt-0 pb-6 flex flex-col">
-                <div className="mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Tabs defaultValue="specification" className="space-y-4">
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="specification">Design Specification</TabsTrigger>
+            <TabsTrigger value="data">Data</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="specification">
+            <Card>
+              <CardHeader>
+                <CardTitle>Design Specification</CardTitle>
+                <CardDescription>
+                  Edit the JSON specification for your design
+                </CardDescription>
+                <div className="mt-4">
                   <ToggleGroup className="w-full" type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
                     <ToggleGroupItem className="flex-1" value="OCA">SWIYU OCA Format</ToggleGroupItem>
                     <ToggleGroupItem className="flex-1" value="ProcivisOne">Procivis One Format</ToggleGroupItem>
                   </ToggleGroup>
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <JsonEditor 
-                    initialJson={activeEditorJSON} 
-                    onJsonUpdate={handleSpecificationUpdate}
-                    height="h-full" 
-                  />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="data" className="h-full m-0 flex flex-col">
-                <div className="flex justify-end mb-4 px-6">
+              </CardHeader>
+              <CardContent>
+                <JsonEditor 
+                  initialJson={activeEditorJSON} 
+                  onJsonUpdate={handleSpecificationUpdate} 
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="data">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Data</CardTitle>
+                    <CardDescription>
+                      Edit the data that will be displayed in your design
+                    </CardDescription>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -697,69 +643,64 @@ const TranslationDashboard = () => {
                     {showAdvancedDataEdit ? "Simple Editor" : "Advanced Editor"}
                   </Button>
                 </div>
-                <div className="px-6 pb-6 flex-1 overflow-auto">
-                  {showAdvancedDataEdit ? (
-                    <div className="border border-input rounded-md p-4 h-full">
-                      <JsonEditor 
-                        initialJson={data} 
-                        onJsonUpdate={(json) => setData(json as OwnerData)}
-                        height="h-full" 
-                      />
-                    </div>
-                  ) : (
-                    <div className="border border-input rounded-md p-4 bg-gray-50 h-full overflow-auto">
-                      {renderDataEditor()}
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-            </CardContent>
-          </Tabs>
-        </Card>
-        
-        <Card className="flex flex-col h-full overflow-hidden">
-          <CardHeader className="pb-2 flex-none">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="text-xl">Preview</CardTitle>
-                <CardDescription>
-                  Visualization of the {formatType === "OCA" ? "SWIYU OCA" : "Procivis One"} format
-                  {formatType === "ProcivisOne" && !procivisPreview.backgroundImage && (
-                    <span className="block text-xs text-amber-600 mt-1">
-                      Note: Procivis One supports background images, but none is specified in this schema
-                    </span>
-                  )}
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                {formatType === "OCA" && availableLanguages.length > 0 && (
-                  <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as LanguageOption)}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableLanguages.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              </CardHeader>
+              <CardContent>
+                {showAdvancedDataEdit ? (
+                  <JsonEditor 
+                    initialJson={data} 
+                    onJsonUpdate={(json) => setData(json as OwnerData)} 
+                  />
+                ) : (
+                  renderDataEditor()
                 )}
-                <Button 
-                  variant="default"
-                  size="sm"
-                  onClick={formatType === "OCA" ? handleConvertToProcivisOne : handleConvertToOCA}
-                  title={formatType === "OCA" ? "Convert to Procivis One" : "Convert to OCA"}
-                >
-                  <ArrowLeftRight className="h-4 w-4 mr-2" />
-                  {formatType === "OCA" ? "To Procivis One" : "To OCA"}
-                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="flex flex-col space-y-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Preview</CardTitle>
+                  <CardDescription>
+                    Visualization of the {formatType === "OCA" ? "SWIYU OCA" : "Procivis One"} format
+                    {formatType === "ProcivisOne" && !procivisPreview.backgroundImage && (
+                      <span className="block text-xs text-amber-600 mt-1">
+                        Note: Procivis One supports background images, but none is specified in this schema
+                      </span>
+                    )}
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  {formatType === "OCA" && availableLanguages.length > 0 && (
+                    <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as LanguageOption)}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableLanguages.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    onClick={formatType === "OCA" ? handleConvertToProcivisOne : handleConvertToOCA}
+                    title={formatType === "OCA" ? "Convert to Procivis One" : "Convert to OCA"}
+                  >
+                    <ArrowLeftRight className="h-4 w-4 mr-2" />
+                    {formatType === "OCA" ? "To Procivis One" : "To OCA"}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 p-6 overflow-auto flex justify-center items-center">
-            <div className="w-full flex justify-center items-center">
+            </CardHeader>
+            <CardContent className="flex justify-center p-6">
               {formatType === "OCA" ? (
                 <PetPermit
                   title={metaOverlay?.name || "SWIYU"}
@@ -768,7 +709,6 @@ const TranslationDashboard = () => {
                   logo={brandingOverlay?.logo}
                   data={data}
                   language={selectedLanguage}
-                  className="w-full"
                 />
               ) : (
                 <ProcivisOneCard
@@ -782,9 +722,9 @@ const TranslationDashboard = () => {
                   logoBackgroundColor={procivisPreview.logoBackgroundColor}
                 />
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       
       {convertedJson && (
@@ -793,7 +733,7 @@ const TranslationDashboard = () => {
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-xl">Converted {formatType} Format</CardTitle>
+                  <CardTitle>Converted {formatType} Format</CardTitle>
                   <CardDescription>
                     JSON representation of the converted format
                   </CardDescription>
@@ -820,7 +760,7 @@ const TranslationDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-80 overflow-y-auto whitespace-pre">
-                <pre className="syntax-highlighted">{convertedJson}</pre>
+                {convertedJson}
               </div>
             </CardContent>
           </Card>
