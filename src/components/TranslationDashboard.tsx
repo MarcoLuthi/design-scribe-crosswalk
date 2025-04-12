@@ -29,6 +29,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 type FormatType = "OCA" | "ProcivisOne";
 type LanguageOption = "en" | "de" | "fr" | "it";
@@ -746,76 +747,84 @@ const TranslationDashboard = () => {
       </div>
       
       {convertedJson && (
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Converted {convertedFormat} Format</CardTitle>
-                  <CardDescription>
-                    JSON representation of the converted format
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="secondary" 
-                    size="icon"
-                    onClick={handleCopyJson}
-                    className="h-9 w-9"
-                  >
-                    {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={handleCloseJsonOutput}
-                    className="h-9 w-9"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-[600px] overflow-y-auto whitespace-pre">
-                {convertedJson}
-              </div>
-            </CardContent>
-          </Card>
+        <>
+          <div className="flex items-center my-8">
+            <Separator className="flex-grow" />
+            <div className="px-4 text-lg font-semibold text-muted-foreground">Converted</div>
+            <Separator className="flex-grow" />
+          </div>
           
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Converted Format Preview</CardTitle>
-              <CardDescription>
-                Visualization of the converted {convertedFormat} format
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center p-6">
-              {convertedFormat === "OCA" && convertedOCAPreview && (
-                <PetPermit
-                  title={convertedOCAPreview.title}
-                  primaryField={convertedOCAPreview.primaryField}
-                  backgroundColor={convertedOCAPreview.backgroundColor}
-                  logo={convertedOCAPreview.logo}
-                  data={convertedOCAPreview.data}
-                  language="en"
-                />
-              )}
-              {convertedFormat === "ProcivisOne" && convertedProcivisPreview && (
-                <ProcivisOneCard
-                  title={convertedProcivisPreview.title}
-                  primaryText={convertedProcivisPreview.primaryText}
-                  secondaryText={convertedProcivisPreview.secondaryText}
-                  backgroundColor={convertedProcivisPreview.backgroundColor}
-                  backgroundImage={convertedProcivisPreview.backgroundImage}
-                  logo={convertedProcivisPreview.logo}
-                  logoFontColor={convertedProcivisPreview.logoFontColor}
-                  logoBackgroundColor={convertedProcivisPreview.logoBackgroundColor}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Converted {convertedFormat} Format</CardTitle>
+                    <CardDescription>
+                      JSON representation of the converted format
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="secondary" 
+                      size="icon"
+                      onClick={handleCopyJson}
+                      className="h-9 w-9"
+                    >
+                      {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={handleCloseJsonOutput}
+                      className="h-9 w-9"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-[600px] overflow-y-auto whitespace-pre">
+                  {convertedJson}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle>Converted Format Preview</CardTitle>
+                <CardDescription>
+                  Visualization of the converted {convertedFormat} format
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-center p-6">
+                {convertedFormat === "OCA" && convertedOCAPreview && (
+                  <PetPermit
+                    title={convertedOCAPreview.title}
+                    primaryField={convertedOCAPreview.primaryField}
+                    backgroundColor={convertedOCAPreview.backgroundColor}
+                    logo={convertedOCAPreview.logo}
+                    data={convertedOCAPreview.data}
+                    language="en"
+                  />
+                )}
+                {convertedFormat === "ProcivisOne" && convertedProcivisPreview && (
+                  <ProcivisOneCard
+                    title={convertedProcivisPreview.title}
+                    primaryText={convertedProcivisPreview.primaryText}
+                    secondaryText={convertedProcivisPreview.secondaryText}
+                    backgroundColor={convertedProcivisPreview.backgroundColor}
+                    backgroundImage={convertedProcivisPreview.backgroundImage}
+                    logo={convertedProcivisPreview.logo}
+                    logoFontColor={convertedProcivisPreview.logoFontColor}
+                    logoBackgroundColor={convertedProcivisPreview.logoBackgroundColor}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </>
       )}
     </div>
   );
