@@ -107,3 +107,20 @@ export function formatPrimaryField(template: string, data: OwnerData): string {
     return match; // Return unmodified if not found
   });
 }
+
+export function getClusterLabel(specification: DesignSpecification, group: string, language?: string): string {
+  if (group === 'root') return 'General Information';
+  
+  const clusterOrderings = specification.overlays.filter(
+    overlay => overlay.type === "extend/overlays/cluster_ordering/1.0" && 
+              (!language || ('language' in overlay && overlay.language === language))
+  );
+  
+  for (const overlay of clusterOrderings) {
+    if ('cluster_labels' in overlay && overlay.cluster_labels[group]) {
+      return overlay.cluster_labels[group];
+    }
+  }
+  
+  return group.charAt(0).toUpperCase() + group.slice(1);
+}

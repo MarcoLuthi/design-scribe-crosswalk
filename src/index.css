@@ -38,6 +38,12 @@
     /* Custom colors for our pet permit */
     --permit-blue: 217 71% 53%;
     --permit-white: 0 0% 100%;
+    
+    /* JSON Editor colors */
+    --json-string: 207 100% 50%;
+    --json-number: 281 100% 50%;
+    --json-boolean: 45 100% 50%;
+    --json-key: 220 100% 50%;
   }
 
   .dark {
@@ -80,3 +86,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* JSON Syntax Highlighting */
+.json-key {
+  color: hsl(var(--json-key));
+}
+
+.json-string {
+  color: hsl(var(--json-string));
+}
+
+.json-number {
+  color: hsl(var(--json-number));
+}
+
+.json-boolean {
+  color: hsl(var(--json-boolean));
+}
+

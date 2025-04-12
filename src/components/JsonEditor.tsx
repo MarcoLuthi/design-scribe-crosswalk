@@ -36,6 +36,20 @@ const JsonEditor = ({
     }
   };
   
+  // Format JSON with syntax highlighting
+  const formatJsonWithHighlighting = (json: string) => {
+    try {
+      // This is a simple syntax highlighter
+      return json
+        .replace(/"([^"]+)":/g, '<span class="text-blue-500">"$1"</span>:')
+        .replace(/: ("[^"]+")/g, ': <span class="text-green-500">$1</span>')
+        .replace(/: (true|false)/g, ': <span class="text-amber-500">$1</span>')
+        .replace(/: (\d+)/g, ': <span class="text-purple-500">$1</span>');
+    } catch (e) {
+      return json;
+    }
+  };
+  
   return (
     <div className="space-y-4">
       {label && (

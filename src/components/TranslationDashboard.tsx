@@ -12,7 +12,8 @@ import {
   getDataSourceOverlays, 
   getAvailableLanguages,
   getAttributeLabel,
-  getLabelOverlays
+  getLabelOverlays,
+  getClusterLabel
 } from "@/utils/design-parser";
 import { DesignSpecification, OwnerData, PetData } from "@/types/design-spec";
 import { ProcivisOneSchema } from "@/types/procivis-one-spec";
@@ -469,17 +470,7 @@ const TranslationDashboard = () => {
     if (group === 'root') return 'General Information';
     
     if (formatType === "OCA") {
-      const clusterOrderings = specification.overlays.filter(
-        overlay => overlay.type === "extend/overlays/cluster_ordering/1.0" && 
-                  'language' in overlay && 
-                  overlay.language === selectedLanguage
-      );
-      
-      for (const overlay of clusterOrderings) {
-        if ('cluster_labels' in overlay && overlay.cluster_labels[group]) {
-          return overlay.cluster_labels[group];
-        }
-      }
+      return getClusterLabel(specification, group, selectedLanguage);
     }
     
     return group.charAt(0).toUpperCase() + group.slice(1);
@@ -593,77 +584,85 @@ const TranslationDashboard = () => {
   
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-4">Design Translation Tool</h1>
+      <h1 className="text-3xl font-bold mb-6">Design Translation Tool</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Tabs defaultValue="specification" className="space-y-4">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="specification">Design Specification</TabsTrigger>
-            <TabsTrigger value="data">Data</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="specification">
-            <Card>
-              <CardHeader>
-                <CardTitle>Design Specification</CardTitle>
-                <CardDescription>
-                  Edit the JSON specification for your design
-                </CardDescription>
-                <div className="mt-4">
-                  <ToggleGroup className="w-full" type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
-                    <ToggleGroupItem className="flex-1" value="OCA">SWIYU OCA Format</ToggleGroupItem>
-                    <ToggleGroupItem className="flex-1" value="ProcivisOne">Procivis One Format</ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <JsonEditor 
-                  initialJson={activeEditorJSON} 
-                  onJsonUpdate={handleSpecificationUpdate} 
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="data">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Data</CardTitle>
-                    <CardDescription>
-                      Edit the data that will be displayed in your design
-                    </CardDescription>
+        <div className="flex flex-col">
+          <Tabs defaultValue="specification" className="flex-1">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="specification">Design Specification</TabsTrigger>
+              <TabsTrigger value="data">Data</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="specification" className="h-full flex-1">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="pb-2 flex-none">
+                  <CardTitle className="text-xl">Design Specification</CardTitle>
+                  <CardDescription>
+                    Edit the JSON specification for your design
+                  </CardDescription>
+                  <div className="mt-4">
+                    <ToggleGroup className="w-full" type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
+                      <ToggleGroupItem className="flex-1" value="OCA">SWIYU OCA Format</ToggleGroupItem>
+                      <ToggleGroupItem className="flex-1" value="ProcivisOne">Procivis One Format</ToggleGroupItem>
+                    </ToggleGroup>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAdvancedDataEdit(!showAdvancedDataEdit)}
-                  >
-                    {showAdvancedDataEdit ? "Simple Editor" : "Advanced Editor"}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {showAdvancedDataEdit ? (
-                  <JsonEditor 
-                    initialJson={data} 
-                    onJsonUpdate={(json) => setData(json as OwnerData)} 
-                  />
-                ) : (
-                  renderDataEditor()
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-hidden flex flex-col pb-6">
+                  <div className="flex-1 overflow-hidden">
+                    <JsonEditor 
+                      initialJson={activeEditorJSON} 
+                      onJsonUpdate={handleSpecificationUpdate}
+                      height="h-full" 
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="data" className="h-full flex-1">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="pb-2 flex-none">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="text-xl">Data</CardTitle>
+                      <CardDescription>
+                        Edit the data that will be displayed in your design
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAdvancedDataEdit(!showAdvancedDataEdit)}
+                    >
+                      {showAdvancedDataEdit ? "Simple Editor" : "Advanced Editor"}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-auto pb-6">
+                  {showAdvancedDataEdit ? (
+                    <JsonEditor 
+                      initialJson={data} 
+                      onJsonUpdate={(json) => setData(json as OwnerData)}
+                      height="h-full" 
+                    />
+                  ) : (
+                    <div className="h-full overflow-auto pr-2">
+                      {renderDataEditor()}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
         
         <div className="flex flex-col space-y-6">
-          <Card>
+          <Card className="h-full">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Preview</CardTitle>
+                  <CardTitle className="text-xl">Preview</CardTitle>
                   <CardDescription>
                     Visualization of the {formatType === "OCA" ? "SWIYU OCA" : "Procivis One"} format
                     {formatType === "ProcivisOne" && !procivisPreview.backgroundImage && (
@@ -700,28 +699,30 @@ const TranslationDashboard = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex justify-center p-6">
-              {formatType === "OCA" ? (
-                <PetPermit
-                  title={metaOverlay?.name || "SWIYU"}
-                  primaryField={brandingOverlay?.primary_field || ""}
-                  backgroundColor={brandingOverlay?.primary_background_color || "#2C75E3"}
-                  logo={brandingOverlay?.logo}
-                  data={data}
-                  language={selectedLanguage}
-                />
-              ) : (
-                <ProcivisOneCard
-                  title={procivisPreview.title}
-                  primaryText={procivisPreview.primaryText}
-                  secondaryText={procivisPreview.secondaryText}
-                  backgroundColor={procivisPreview.backgroundColor}
-                  backgroundImage={procivisPreview.backgroundImage}
-                  logo={procivisPreview.logo}
-                  logoFontColor={procivisPreview.logoFontColor}
-                  logoBackgroundColor={procivisPreview.logoBackgroundColor}
-                />
-              )}
+            <CardContent className="flex justify-center items-center p-6 flex-1">
+              <div className="transform scale-[0.95] origin-center">
+                {formatType === "OCA" ? (
+                  <PetPermit
+                    title={metaOverlay?.name || "SWIYU"}
+                    primaryField={brandingOverlay?.primary_field || ""}
+                    backgroundColor={brandingOverlay?.primary_background_color || "#2C75E3"}
+                    logo={brandingOverlay?.logo}
+                    data={data}
+                    language={selectedLanguage}
+                  />
+                ) : (
+                  <ProcivisOneCard
+                    title={procivisPreview.title}
+                    primaryText={procivisPreview.primaryText}
+                    secondaryText={procivisPreview.secondaryText}
+                    backgroundColor={procivisPreview.backgroundColor}
+                    backgroundImage={procivisPreview.backgroundImage}
+                    logo={procivisPreview.logo}
+                    logoFontColor={procivisPreview.logoFontColor}
+                    logoBackgroundColor={procivisPreview.logoBackgroundColor}
+                  />
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -733,7 +734,7 @@ const TranslationDashboard = () => {
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Converted {formatType} Format</CardTitle>
+                  <CardTitle className="text-xl">Converted {formatType} Format</CardTitle>
                   <CardDescription>
                     JSON representation of the converted format
                   </CardDescription>
@@ -759,7 +760,7 @@ const TranslationDashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-80 overflow-y-auto whitespace-pre">
+              <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-80 overflow-y-auto whitespace-pre syntax-highlighted">
                 {convertedJson}
               </div>
             </CardContent>
