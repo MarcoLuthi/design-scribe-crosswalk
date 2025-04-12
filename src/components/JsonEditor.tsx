@@ -10,7 +10,6 @@ interface JsonEditorProps {
   height?: string;
   label?: string;
   description?: string;
-  className?: string;
 }
 
 const JsonEditor = ({ 
@@ -18,8 +17,7 @@ const JsonEditor = ({
   onJsonUpdate, 
   height = "h-80", 
   label,
-  description,
-  className
+  description
 }: JsonEditorProps) => {
   const [jsonText, setJsonText] = useState(JSON.stringify(initialJson, null, 2));
   
@@ -39,7 +37,7 @@ const JsonEditor = ({
   };
   
   return (
-    <div className={`space-y-4 flex flex-col h-full ${className}`}>
+    <div className="space-y-4">
       {label && (
         <div className="mb-2">
           <h3 className="text-base font-medium">{label}</h3>
@@ -47,7 +45,7 @@ const JsonEditor = ({
         </div>
       )}
       <Textarea
-        className={`font-mono ${height} text-sm flex-grow overflow-y-auto`}
+        className={`font-mono ${height} text-sm`}
         value={jsonText}
         onChange={(e) => setJsonText(e.target.value)}
       />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -596,16 +595,16 @@ const TranslationDashboard = () => {
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-4">Design Translation Tool</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-        <Tabs defaultValue="specification" className="space-y-4 flex flex-col h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Tabs defaultValue="specification" className="space-y-4">
           <TabsList className="grid grid-cols-2">
             <TabsTrigger value="specification">Design Specification</TabsTrigger>
             <TabsTrigger value="data">Data</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="specification" className="flex-grow flex flex-col h-full">
-            <Card className="flex flex-col h-full">
-              <CardHeader className="pb-2">
+          <TabsContent value="specification">
+            <Card>
+              <CardHeader>
                 <CardTitle>Design Specification</CardTitle>
                 <CardDescription>
                   Edit the JSON specification for your design
@@ -617,19 +616,18 @@ const TranslationDashboard = () => {
                   </ToggleGroup>
                 </div>
               </CardHeader>
-              <CardContent className="flex-grow pb-6 flex flex-col">
+              <CardContent>
                 <JsonEditor 
                   initialJson={activeEditorJSON} 
                   onJsonUpdate={handleSpecificationUpdate} 
-                  className="flex-grow h-full" 
                 />
               </CardContent>
             </Card>
           </TabsContent>
           
-          <TabsContent value="data" className="flex-grow flex flex-col h-full">
-            <Card className="flex flex-col h-full">
-              <CardHeader className="pb-2">
+          <TabsContent value="data">
+            <Card>
+              <CardHeader>
                 <div className="flex justify-between items-center">
                   <div>
                     <CardTitle>Data</CardTitle>
@@ -646,27 +644,22 @@ const TranslationDashboard = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="flex-grow pb-6 overflow-y-auto">
+              <CardContent>
                 {showAdvancedDataEdit ? (
-                  <div className="h-full flex flex-col">
-                    <JsonEditor 
-                      initialJson={data} 
-                      onJsonUpdate={(json) => setData(json as OwnerData)}
-                      className="h-full flex-grow" 
-                    />
-                  </div>
+                  <JsonEditor 
+                    initialJson={data} 
+                    onJsonUpdate={(json) => setData(json as OwnerData)} 
+                  />
                 ) : (
-                  <div className="h-full overflow-y-auto pr-2">
-                    {renderDataEditor()}
-                  </div>
+                  renderDataEditor()
                 )}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
         
-        <div className="flex flex-col h-full">
-          <Card className="h-full flex flex-col">
+        <div className="flex flex-col space-y-6">
+          <Card>
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
                 <div>
@@ -707,7 +700,7 @@ const TranslationDashboard = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex justify-center p-6 flex-grow">
+            <CardContent className="flex justify-center p-6">
               {formatType === "OCA" ? (
                 <PetPermit
                   title={metaOverlay?.name || "SWIYU"}
@@ -716,7 +709,6 @@ const TranslationDashboard = () => {
                   logo={brandingOverlay?.logo}
                   data={data}
                   language={selectedLanguage}
-                  className="h-full"
                 />
               ) : (
                 <ProcivisOneCard
