@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +32,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type FormatType = "OCA" | "ProcivisOne";
 type LanguageOption = "en" | "de" | "fr" | "it";
@@ -107,6 +109,7 @@ const TranslationDashboard = () => {
   }, [specification, procivisSpec, formatType]);
   
   const extractOCADataStructure = () => {
+    console.log("Extracting data structure from OCA specification...");
     const structure: {
       simple: { [key: string]: string[] },
       arrays: { [key: string]: { fields: string[] } }
@@ -115,43 +118,40 @@ const TranslationDashboard = () => {
       arrays: {}
     };
     
+    // Initialize with default structure to ensure we always have something to show
     structure.simple['root'] = ['firstname', 'lastname'];
     structure.simple['address'] = ['street', 'city', 'country'];
     structure.arrays['pets'] = { fields: ['name', 'race'] };
     
+    // Extract from data if available
     if (data && Object.keys(data).length > 0) {
-      if (data.firstname !== undefined) {
-        if (!structure.simple['root'].includes('firstname')) {
-          structure.simple['root'].push('firstname');
+      // Extract root level properties
+      const rootProperties = ['firstname', 'lastname'];
+      rootProperties.forEach(prop => {
+        if (data[prop as keyof typeof data] !== undefined && !structure.simple['root'].includes(prop)) {
+          structure.simple['root'].push(prop);
+        }
+      });
+      
+      // Extract address properties
+      if (data.address && typeof data.address === 'object') {
+        structure.simple['address'] = Object.keys(data.address);
+        if (structure.simple['address'].length === 0) {
+          structure.simple['address'] = ['street', 'city', 'country'];
         }
       }
       
-      if (data.lastname !== undefined) {
-        if (!structure.simple['root'].includes('lastname')) {
-          structure.simple['root'].push('lastname');
-        }
-      }
-      
-      if (data.address && Object.keys(data.address).length > 0) {
-        structure.simple['address'] = [];
-        for (const key in data.address) {
-          structure.simple['address'].push(key);
-        }
-      }
-      
+      // Extract pet properties
       if (Array.isArray(data.pets) && data.pets.length > 0) {
-        structure.arrays['pets'] = { fields: [] };
         const firstPet = data.pets[0];
-        for (const key in firstPet) {
-          structure.arrays['pets'].fields.push(key);
-        }
-        
+        structure.arrays['pets'] = { fields: Object.keys(firstPet) };
         if (structure.arrays['pets'].fields.length === 0) {
           structure.arrays['pets'].fields = ['name', 'race'];
         }
       }
     }
     
+    // Extract from specification via data source overlays
     const dataSourceOverlays = getDataSourceOverlays(specification);
     
     dataSourceOverlays.forEach(overlay => {
@@ -201,13 +201,15 @@ const TranslationDashboard = () => {
       });
     });
     
+    // Ensure we have default pets fields if none were extracted
+    if (!structure.arrays['pets'] || structure.arrays['pets'].fields.length === 0) {
+      structure.arrays['pets'] = { fields: ['name', 'race'] };
+    }
+    
+    // Remove duplicates
     Object.keys(structure.simple).forEach(key => {
       structure.simple[key] = [...new Set(structure.simple[key])];
     });
-    
-    if (structure.arrays['pets'] && structure.arrays['pets'].fields.length === 0) {
-      structure.arrays['pets'].fields = ['name', 'race'];
-    }
     
     console.log("Final data structure:", structure);
     setDataStructure(structure);
@@ -547,7 +549,7 @@ const TranslationDashboard = () => {
           return (
             <div key={group} className="space-y-4">
               <h3 className="text-base font-medium">{groupLabel}</h3>
-              <div className="space-y-3">
+              <div className="grid gap-4">
                 {fields.map(field => {
                   const fieldPath = group === 'root' ? field : `${group}.${field}`;
                   const fieldValue = getNestedValue(data, fieldPath);
@@ -555,15 +557,17 @@ const TranslationDashboard = () => {
                   
                   return (
                     <div key={fieldPath} className="grid grid-cols-3 items-center gap-4">
-                      <label className="text-sm font-medium text-right">
+                      <Label className="text-sm font-medium text-right">
                         {fieldLabel}:
-                      </label>
-                      <Input
-                        type="text"
-                        className="col-span-2"
-                        value={fieldValue || ""}
-                        onChange={(e) => updateDataField(fieldPath, e.target.value)}
-                      />
+                      </Label>
+                      <div className="col-span-2">
+                        <Input
+                          type="text"
+                          value={fieldValue || ""}
+                          onChange={(e) => updateDataField(fieldPath, e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
                     </div>
                   );
                 })}
@@ -610,7 +614,6 @@ const TranslationDashboard = () => {
                           <TableCell key={field}>
                             <Input
                               type="text"
-                              className="w-full"
                               value={item[field] || ""}
                               onChange={(e) => updateArrayItem(arrayName, index, field, e.target.value)}
                             />
@@ -687,7 +690,7 @@ const TranslationDashboard = () => {
                     {showAdvancedDataEdit ? "Simple Editor" : "Advanced Editor"}
                   </Button>
                 </div>
-                <div className="flex-1 overflow-auto bg-background">
+                <div className="flex-1 overflow-auto bg-background rounded-md p-4 border border-input">
                   {showAdvancedDataEdit ? (
                     <JsonEditor 
                       initialJson={data} 
@@ -695,7 +698,7 @@ const TranslationDashboard = () => {
                       height="h-full" 
                     />
                   ) : (
-                    <div className="h-full overflow-auto pr-2">
+                    <div className="h-full overflow-auto">
                       {renderDataEditor()}
                     </div>
                   )}
