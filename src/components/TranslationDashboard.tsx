@@ -5,7 +5,7 @@ import { defaultData, defaultSpecification } from "@/data/default-specification"
 import { defaultProcivisOneSchema } from "@/data/default-procivis-spec";
 import JsonEditor from "./JsonEditor";
 import PetPermit from "./PetPermit";
-import { formatPrimaryField, getBrandingOverlay, getMetaOverlay, getDataSourceOverlays } from "@/utils/design-parser";
+import { formatPrimaryField, getBrandingOverlay, getMetaOverlay, getDataSourceOverlays, getAvailableLanguages } from "@/utils/design-parser";
 import { DesignSpecification, OwnerData, PetData } from "@/types/design-spec";
 import { ProcivisOneSchema } from "@/types/procivis-one-spec";
 import { 
@@ -54,7 +54,7 @@ const TranslationDashboard = () => {
   const procivisPreview = formatProcivisOnePreview(procivisSpec, data);
   
   const availableLanguages = useMemo(() => {
-    if (formatType !== "OCA") return [{ value: "en", label: "English" }];
+    if (formatType !== "OCA") return [{ value: "en" as LanguageOption, label: "English" }];
     
     const availableLangs = new Set<string>();
     
@@ -87,10 +87,11 @@ const TranslationDashboard = () => {
     if (availableLanguages.length > 0) {
       const defaultLang = availableLanguages.find(lang => lang.value === selectedLanguage);
       if (!defaultLang) {
-        setSelectedLanguage(availableLanguages[0].value);
+        const firstLangValue = availableLanguages[0].value;
+        setSelectedLanguage(firstLangValue);
       }
     }
-  }, [availableLanguages]);
+  }, [availableLanguages, selectedLanguage]);
   
   useEffect(() => {
     if (formatType === "OCA") {
