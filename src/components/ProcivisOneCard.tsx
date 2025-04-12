@@ -1,4 +1,3 @@
-
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useEffect, useState } from "react";
 
@@ -74,7 +73,7 @@ const ProcivisOneCard = ({
       // Reset average color when background image changes or is removed
       setAverageColor(null);
     }
-  }, [backgroundImage, backgroundColor, primaryText, secondaryText, title]); // Add dependencies to update preview when data changes
+  }, [backgroundImage, backgroundColor, primaryText, secondaryText, title]);
 
   // Use average color as fallback if available and no backgroundColor is provided
   const effectiveBackgroundColor = backgroundColor || averageColor || "#2C75E3";
@@ -121,18 +120,20 @@ const ProcivisOneCard = ({
         </div>
       </div>
       
-      {/* Main card body with fixed height */}
-      <div className="w-full h-[180px]">
-        <div
-          className="w-full h-full"
-          style={
-            backgroundImage 
-              ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-              : { backgroundColor: effectiveBackgroundColor }
-          }
-        >
-          {/* Card content would go here */}
-        </div>
+      {/* Main card body with fixed aspect ratio */}
+      <div className="w-full">
+        <AspectRatio ratio={16/7.5}>
+          <div
+            className="w-full h-full"
+            style={
+              backgroundImage 
+                ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : { backgroundColor: effectiveBackgroundColor }
+            }
+          >
+            {/* Card content would go here */}
+          </div>
+        </AspectRatio>
       </div>
     </div>
   );
