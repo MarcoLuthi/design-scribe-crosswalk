@@ -30,6 +30,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 type FormatType = "OCA" | "ProcivisOne";
 type LanguageOption = "en" | "de" | "fr" | "it";
@@ -114,49 +115,41 @@ const TranslationDashboard = () => {
       arrays: {}
     };
     
-    if (!Object.keys(data).length) {
-      structure.simple['root'] = ['firstname', 'lastname'];
-      if (data.address) {
-        structure.simple['address'] = ['street', 'city', 'country'];
-      } else {
-        structure.simple['address'] = ['street', 'city', 'country'];
+    structure.simple['root'] = ['firstname', 'lastname'];
+    structure.simple['address'] = ['street', 'city', 'country'];
+    structure.arrays['pets'] = { fields: ['name', 'race'] };
+    
+    if (data && Object.keys(data).length > 0) {
+      if (data.firstname !== undefined) {
+        if (!structure.simple['root'].includes('firstname')) {
+          structure.simple['root'].push('firstname');
+        }
       }
       
-      if (Array.isArray(data.pets) && data.pets.length) {
-        structure.arrays['pets'] = { fields: ['name', 'race'] };
-      } else {
-        structure.arrays['pets'] = { fields: ['name', 'race'] };
+      if (data.lastname !== undefined) {
+        if (!structure.simple['root'].includes('lastname')) {
+          structure.simple['root'].push('lastname');
+        }
       }
       
-      setDataStructure(structure);
-      return;
-    }
-    
-    if (data.firstname !== undefined && !structure.simple['root']?.includes('firstname')) {
-      if (!structure.simple['root']) structure.simple['root'] = [];
-      structure.simple['root'].push('firstname');
-    }
-    
-    if (data.lastname !== undefined && !structure.simple['root']?.includes('lastname')) {
-      if (!structure.simple['root']) structure.simple['root'] = [];
-      structure.simple['root'].push('lastname');
-    }
-    
-    if (data.address) {
-      structure.simple['address'] = [];
-      for (const key in data.address) {
-        structure.simple['address'].push(key);
+      if (data.address && Object.keys(data.address).length > 0) {
+        structure.simple['address'] = [];
+        for (const key in data.address) {
+          structure.simple['address'].push(key);
+        }
       }
-    }
-    
-    if (Array.isArray(data.pets) && data.pets.length > 0) {
-      structure.arrays['pets'] = { fields: [] };
-      const firstPet = data.pets[0];
-      for (const key in firstPet) {
-        structure.arrays['pets'].fields.push(key);
+      
+      if (Array.isArray(data.pets) && data.pets.length > 0) {
+        structure.arrays['pets'] = { fields: [] };
+        const firstPet = data.pets[0];
+        for (const key in firstPet) {
+          structure.arrays['pets'].fields.push(key);
+        }
+        
+        if (structure.arrays['pets'].fields.length === 0) {
+          structure.arrays['pets'].fields = ['name', 'race'];
+        }
       }
-    } else if (!structure.arrays['pets']) {
-      structure.arrays['pets'] = { fields: ['name', 'race'] };
     }
     
     const dataSourceOverlays = getDataSourceOverlays(specification);
@@ -208,12 +201,15 @@ const TranslationDashboard = () => {
       });
     });
     
-    if (Object.keys(structure.simple).length === 0 && Object.keys(structure.arrays).length === 0) {
-      structure.simple['root'] = ['firstname', 'lastname'];
-      structure.simple['address'] = ['street', 'city', 'country'];
-      structure.arrays['pets'] = { fields: ['name', 'race'] };
+    Object.keys(structure.simple).forEach(key => {
+      structure.simple[key] = [...new Set(structure.simple[key])];
+    });
+    
+    if (structure.arrays['pets'] && structure.arrays['pets'].fields.length === 0) {
+      structure.arrays['pets'].fields = ['name', 'race'];
     }
     
+    console.log("Final data structure:", structure);
     setDataStructure(structure);
   };
   
@@ -531,6 +527,16 @@ const TranslationDashboard = () => {
     console.log("Rendering data editor with structure:", dataStructure);
     console.log("Current data:", data);
     
+    if (Object.keys(dataStructure.simple).length === 0 && Object.keys(dataStructure.arrays).length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center p-8 border border-dashed rounded-md text-muted-foreground">
+            No data structure detected. Please ensure your specification includes proper data source overlays.
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="space-y-6">
         {Object.entries(dataStructure.simple).map(([group, fields]) => {
@@ -552,9 +558,9 @@ const TranslationDashboard = () => {
                       <label className="text-sm font-medium text-right">
                         {fieldLabel}:
                       </label>
-                      <input
+                      <Input
                         type="text"
-                        className="col-span-2 px-3 py-2 border rounded-md"
+                        className="col-span-2"
                         value={fieldValue || ""}
                         onChange={(e) => updateDataField(fieldPath, e.target.value)}
                       />
@@ -569,7 +575,7 @@ const TranslationDashboard = () => {
         {Object.entries(dataStructure.arrays).map(([arrayName, arrayConfig]) => {
           const items = data[arrayName as keyof typeof data] as any[] || [];
           const arrayLabel = getLocalizedGroupLabel(arrayName);
-          const singularArrayName = arrayName.endsWith('s') ? arrayName.slice(0, -1) : arrayName;
+          const singularArrayName = arrayName.endsWith('s') ? arrayName.slice(0, -1) : `${arrayName} item`;
           
           return (
             <div key={arrayName} className="space-y-4">
@@ -602,9 +608,9 @@ const TranslationDashboard = () => {
                       <TableRow key={index}>
                         {arrayConfig.fields.map(field => (
                           <TableCell key={field}>
-                            <input
+                            <Input
                               type="text"
-                              className="w-full px-2 py-1 border rounded-md"
+                              className="w-full"
                               value={item[field] || ""}
                               onChange={(e) => updateArrayItem(arrayName, index, field, e.target.value)}
                             />
@@ -632,13 +638,6 @@ const TranslationDashboard = () => {
             </div>
           );
         })}
-        
-        {Object.keys(dataStructure.simple).length === 0 && 
-         Object.keys(dataStructure.arrays).length === 0 && (
-          <div className="text-center p-8 border border-dashed rounded-md text-muted-foreground">
-            No data structure detected. Please ensure your specification includes proper data source overlays.
-          </div>
-        )}
       </div>
     );
   };
@@ -678,7 +677,7 @@ const TranslationDashboard = () => {
                 </div>
               </TabsContent>
               
-              <TabsContent value="data" className="h-full m-0 p-6 pt-0 pb-6 flex flex-col">
+              <TabsContent value="data" className="h-full m-0 p-6 pt-0 pb-6 flex flex-col overflow-hidden">
                 <div className="flex justify-end mb-4">
                   <Button
                     variant="outline"
@@ -688,7 +687,7 @@ const TranslationDashboard = () => {
                     {showAdvancedDataEdit ? "Simple Editor" : "Advanced Editor"}
                   </Button>
                 </div>
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-auto bg-background">
                   {showAdvancedDataEdit ? (
                     <JsonEditor 
                       initialJson={data} 
