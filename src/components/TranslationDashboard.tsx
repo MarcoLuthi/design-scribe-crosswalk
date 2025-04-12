@@ -51,6 +51,9 @@ const TranslationDashboard = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>("en");
   const [isCopied, setIsCopied] = useState(false);
   
+  const [convertedFormat, setConvertedFormat] = useState<FormatType | null>(null);
+  const [convertedData, setConvertedData] = useState<OwnerData | null>(null);
+  
   const { toast } = useToast();
   const brandingOverlay = getBrandingOverlay(specification, selectedLanguage);
   const metaOverlay = getMetaOverlay(specification, selectedLanguage);
@@ -61,6 +64,29 @@ const TranslationDashboard = () => {
     : "";
   
   const procivisPreview = formatProcivisOnePreview(procivisSpec, data);
+  
+  const convertedOCAPreview = useMemo(() => {
+    if (!convertedFormat || convertedFormat !== "OCA" || !convertedJson) return null;
+    
+    const parsedSpec = JSON.parse(convertedJson) as DesignSpecification;
+    const convertedBrandingOverlay = getBrandingOverlay(parsedSpec, "en");
+    const convertedMetaOverlay = getMetaOverlay(parsedSpec, "en");
+    
+    return {
+      title: convertedMetaOverlay?.name || "SWIYU",
+      primaryField: convertedBrandingOverlay?.primary_field || "",
+      backgroundColor: convertedBrandingOverlay?.primary_background_color || "#2C75E3",
+      logo: convertedBrandingOverlay?.logo,
+      data: convertedData || data
+    };
+  }, [convertedFormat, convertedJson, convertedData, data]);
+  
+  const convertedProcivisPreview = useMemo(() => {
+    if (!convertedFormat || convertedFormat !== "ProcivisOne" || !convertedJson) return null;
+    
+    const parsedSpec = JSON.parse(convertedJson) as ProcivisOneSchema;
+    return formatProcivisOnePreview(parsedSpec, convertedData || data);
+  }, [convertedFormat, convertedJson, convertedData, data]);
   
   const availableLanguages = useMemo(() => {
     if (formatType !== "OCA") return [{ value: "en" as LanguageOption, label: "English" }];
@@ -224,6 +250,8 @@ const TranslationDashboard = () => {
     setFormatType(newFormat);
     setActiveEditorJSON(newFormat === "OCA" ? specification : procivisSpec);
     setConvertedJson(null);
+    setConvertedFormat(null);
+    setConvertedData(null);
   };
   
   const handleSpecificationUpdate = (newSpec: object) => {
@@ -239,12 +267,12 @@ const TranslationDashboard = () => {
       setSpecification(convertProcivisOneToOCA(typedSpec));
     }
     setConvertedJson(null);
+    setConvertedFormat(null);
+    setConvertedData(null);
   };
   
   const handleConvertToOCA = () => {
     const convertedSpec = convertProcivisOneToOCA(procivisSpec);
-    setSpecification(convertedSpec);
-    
     const newData = createDefaultDataFromSchema(procivisSpec);
     
     if (data.firstname) newData.firstname = data.firstname;
@@ -257,25 +285,18 @@ const TranslationDashboard = () => {
       (newData as any).etwtwrt = (data as any).etwtwrt;
     }
     
-    setData(newData);
-    setFormatType("OCA");
-    setActiveEditorJSON(convertedSpec);
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
+    setConvertedFormat("OCA");
+    setConvertedData(newData);
     
     toast({
       title: "Format converted",
       description: "Successfully converted from Procivis One to OCA format",
     });
-    
-    setTimeout(() => {
-      extractOCADataStructure();
-    }, 50);
   };
   
   const handleConvertToProcivisOne = () => {
     const convertedSpec = convertOCAToProcivisOne(specification);
-    setProcivisSpec(convertedSpec);
-    
     const newData = createDefaultDataFromSchema(convertedSpec);
     
     if (data.firstname) newData.firstname = data.firstname;
@@ -288,23 +309,20 @@ const TranslationDashboard = () => {
       (newData as any).etwtwrt = (data as any).etwtwrt;
     }
     
-    setData(newData);
-    setFormatType("ProcivisOne");
-    setActiveEditorJSON(convertedSpec);
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
+    setConvertedFormat("ProcivisOne");
+    setConvertedData(newData);
     
     toast({
       title: "Format converted",
       description: "Successfully converted from OCA to Procivis One format",
     });
-    
-    setTimeout(() => {
-      extractProcivisOneDataStructure();
-    }, 50);
   };
   
   const handleCloseJsonOutput = () => {
     setConvertedJson(null);
+    setConvertedFormat(null);
+    setConvertedData(null);
   };
   
   const handleCopyJson = () => {
@@ -728,12 +746,12 @@ const TranslationDashboard = () => {
       </div>
       
       {convertedJson && (
-        <div className="mt-8">
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card>
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Converted {formatType} Format</CardTitle>
+                  <CardTitle>Converted {convertedFormat} Format</CardTitle>
                   <CardDescription>
                     JSON representation of the converted format
                   </CardDescription>
@@ -759,9 +777,42 @@ const TranslationDashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-80 overflow-y-auto whitespace-pre">
+              <div className="bg-muted p-4 rounded-md font-mono text-sm max-h-[600px] overflow-y-auto whitespace-pre">
                 {convertedJson}
               </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Converted Format Preview</CardTitle>
+              <CardDescription>
+                Visualization of the converted {convertedFormat} format
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center p-6">
+              {convertedFormat === "OCA" && convertedOCAPreview && (
+                <PetPermit
+                  title={convertedOCAPreview.title}
+                  primaryField={convertedOCAPreview.primaryField}
+                  backgroundColor={convertedOCAPreview.backgroundColor}
+                  logo={convertedOCAPreview.logo}
+                  data={convertedOCAPreview.data}
+                  language="en"
+                />
+              )}
+              {convertedFormat === "ProcivisOne" && convertedProcivisPreview && (
+                <ProcivisOneCard
+                  title={convertedProcivisPreview.title}
+                  primaryText={convertedProcivisPreview.primaryText}
+                  secondaryText={convertedProcivisPreview.secondaryText}
+                  backgroundColor={convertedProcivisPreview.backgroundColor}
+                  backgroundImage={convertedProcivisPreview.backgroundImage}
+                  logo={convertedProcivisPreview.logo}
+                  logoFontColor={convertedProcivisPreview.logoFontColor}
+                  logoBackgroundColor={convertedProcivisPreview.logoBackgroundColor}
+                />
+              )}
             </CardContent>
           </Card>
         </div>
