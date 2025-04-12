@@ -10,6 +10,7 @@ interface PetPermitProps {
   backgroundColor: string;
   logo?: string;
   data: OwnerData;
+  language?: "en" | "de" | "fr" | "it";
 }
 
 const PetPermit = ({
@@ -17,7 +18,8 @@ const PetPermit = ({
   primaryField,
   backgroundColor,
   logo,
-  data
+  data,
+  language = "en"
 }: PetPermitProps) => {
   // Format the primary field template with the actual data
   const formattedPrimaryField = formatPrimaryField(primaryField, data);
@@ -40,6 +42,15 @@ const PetPermit = ({
         
         {/* Primary Field */}
         <p className="text-white text-2xl mb-8">{formattedPrimaryField}</p>
+        
+        {/* Language indicator (if needed) */}
+        {language !== "en" && (
+          <div className="mb-4">
+            <span className="text-white text-xs uppercase bg-white bg-opacity-20 px-2 py-1 rounded">
+              {language}
+            </span>
+          </div>
+        )}
         
         {/* Bottom validation section */}
         <div className="mt-auto">
