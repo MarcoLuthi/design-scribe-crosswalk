@@ -274,17 +274,8 @@ const TranslationDashboard = () => {
   
   const handleConvertToOCA = () => {
     const convertedSpec = convertProcivisOneToOCA(procivisSpec);
-    const newData = createDefaultDataFromSchema(procivisSpec);
     
-    if (data.firstname) newData.firstname = data.firstname;
-    if (data.lastname) newData.lastname = data.lastname;
-    if (data.address?.street) newData.address.street = data.address.street;
-    if (data.address?.city) newData.address.city = data.address.city;
-    if (data.address?.country) newData.address.country = data.address.country;
-    
-    if ((data as any).etwtwrt) {
-      (newData as any).etwtwrt = (data as any).etwtwrt;
-    }
+    const newData = { ...data };
     
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
     setConvertedFormat("OCA");
@@ -298,17 +289,8 @@ const TranslationDashboard = () => {
   
   const handleConvertToProcivisOne = () => {
     const convertedSpec = convertOCAToProcivisOne(specification);
-    const newData = createDefaultDataFromSchema(convertedSpec);
     
-    if (data.firstname) newData.firstname = data.firstname;
-    if (data.lastname) newData.lastname = data.lastname;
-    if (data.address?.street) newData.address.street = data.address.street;
-    if (data.address?.city) newData.address.city = data.address.city;
-    if (data.address?.country) newData.address.country = data.address.country;
-    
-    if ((data as any).etwtwrt) {
-      (newData as any).etwtwrt = (data as any).etwtwrt;
-    }
+    const newData = { ...data };
     
     setConvertedJson(JSON.stringify(convertedSpec, null, 2));
     setConvertedFormat("ProcivisOne");
@@ -805,7 +787,7 @@ const TranslationDashboard = () => {
                     primaryField={convertedOCAPreview.primaryField}
                     backgroundColor={convertedOCAPreview.backgroundColor}
                     logo={convertedOCAPreview.logo}
-                    data={convertedOCAPreview.data}
+                    data={data}
                     language="en"
                   />
                 )}
