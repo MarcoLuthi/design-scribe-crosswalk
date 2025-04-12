@@ -730,10 +730,10 @@ const TranslationDashboard = () => {
       
       {convertedJson && (
         <>
-          <div className="container mx-auto flex items-center my-8 px-4">
-            <Separator className="flex-grow" />
+          <div className="flex items-center my-8 max-w-full">
+            <Separator className="flex-1" />
             <div className="px-4 text-lg font-semibold text-muted-foreground">Converted</div>
-            <Separator className="flex-grow" />
+            <Separator className="flex-1" />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
