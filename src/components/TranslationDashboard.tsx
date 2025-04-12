@@ -33,6 +33,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type FormatType = "OCA" | "ProcivisOne";
 type LanguageOption = "en" | "de" | "fr" | "it";
@@ -126,12 +128,15 @@ const TranslationDashboard = () => {
     // Extract from data if available
     if (data && Object.keys(data).length > 0) {
       // Extract root level properties
-      const rootProperties = ['firstname', 'lastname'];
-      rootProperties.forEach(prop => {
-        if (data[prop as keyof typeof data] !== undefined && !structure.simple['root'].includes(prop)) {
-          structure.simple['root'].push(prop);
-        }
-      });
+      const rootProperties = Object.keys(data).filter(key => 
+        typeof data[key as keyof typeof data] !== 'object' && 
+        key !== 'pets' && 
+        key !== 'address'
+      );
+      
+      if (rootProperties.length > 0) {
+        structure.simple['root'] = rootProperties;
+      }
       
       // Extract address properties
       if (data.address && typeof data.address === 'object') {
@@ -540,15 +545,15 @@ const TranslationDashboard = () => {
     }
     
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         {Object.entries(dataStructure.simple).map(([group, fields]) => {
           if (fields.length === 0) return null;
           
           const groupLabel = getLocalizedGroupLabel(group);
           
           return (
-            <div key={group} className="space-y-4">
-              <h3 className="text-base font-medium">{groupLabel}</h3>
+            <div key={group} className="space-y-4 border p-4 rounded-md bg-white">
+              <h3 className="text-base font-medium border-b pb-2">{groupLabel}</h3>
               <div className="grid gap-4">
                 {fields.map(field => {
                   const fieldPath = group === 'root' ? field : `${group}.${field}`;
@@ -557,15 +562,16 @@ const TranslationDashboard = () => {
                   
                   return (
                     <div key={fieldPath} className="grid grid-cols-3 items-center gap-4">
-                      <Label className="text-sm font-medium text-right">
+                      <Label htmlFor={`input-${fieldPath}`} className="text-sm font-medium text-right">
                         {fieldLabel}:
                       </Label>
                       <div className="col-span-2">
                         <Input
+                          id={`input-${fieldPath}`}
                           type="text"
                           value={fieldValue || ""}
                           onChange={(e) => updateDataField(fieldPath, e.target.value)}
-                          className="w-full"
+                          className="w-full border-gray-300"
                         />
                       </div>
                     </div>
@@ -582,8 +588,8 @@ const TranslationDashboard = () => {
           const singularArrayName = arrayName.endsWith('s') ? arrayName.slice(0, -1) : `${arrayName} item`;
           
           return (
-            <div key={arrayName} className="space-y-4">
-              <div className="flex items-center justify-between">
+            <div key={arrayName} className="space-y-4 border p-4 rounded-md bg-white">
+              <div className="flex items-center justify-between border-b pb-2">
                 <h3 className="text-base font-medium">{arrayLabel}</h3>
                 <Button
                   variant="outline"
@@ -598,7 +604,7 @@ const TranslationDashboard = () => {
               {items && items.length > 0 ? (
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-gray-50">
                       {arrayConfig.fields.map(field => (
                         <TableHead key={field}>
                           {getLocalizedFieldLabel(field, arrayName)}
@@ -616,6 +622,7 @@ const TranslationDashboard = () => {
                               type="text"
                               value={item[field] || ""}
                               onChange={(e) => updateArrayItem(arrayName, index, field, e.target.value)}
+                              className="w-full border-gray-300"
                             />
                           </TableCell>
                         ))}
@@ -680,8 +687,8 @@ const TranslationDashboard = () => {
                 </div>
               </TabsContent>
               
-              <TabsContent value="data" className="h-full m-0 p-6 pt-0 pb-6 flex flex-col overflow-hidden">
-                <div className="flex justify-end mb-4">
+              <TabsContent value="data" className="h-full m-0 flex flex-col">
+                <div className="flex justify-end mb-4 px-6">
                   <Button
                     variant="outline"
                     size="sm"
@@ -690,15 +697,17 @@ const TranslationDashboard = () => {
                     {showAdvancedDataEdit ? "Simple Editor" : "Advanced Editor"}
                   </Button>
                 </div>
-                <div className="flex-1 overflow-auto bg-background rounded-md p-4 border border-input">
+                <div className="px-6 pb-6 flex-1 overflow-auto">
                   {showAdvancedDataEdit ? (
-                    <JsonEditor 
-                      initialJson={data} 
-                      onJsonUpdate={(json) => setData(json as OwnerData)}
-                      height="h-full" 
-                    />
+                    <div className="border border-input rounded-md p-4 h-full">
+                      <JsonEditor 
+                        initialJson={data} 
+                        onJsonUpdate={(json) => setData(json as OwnerData)}
+                        height="h-full" 
+                      />
+                    </div>
                   ) : (
-                    <div className="h-full overflow-auto">
+                    <div className="border border-input rounded-md p-4 bg-gray-50 h-full overflow-auto">
                       {renderDataEditor()}
                     </div>
                   )}
