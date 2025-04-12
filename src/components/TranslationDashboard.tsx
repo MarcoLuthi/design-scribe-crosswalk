@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -595,14 +596,14 @@ const TranslationDashboard = () => {
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-4">Design Translation Tool</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
         <Tabs defaultValue="specification" className="space-y-4 flex flex-col h-full">
           <TabsList className="grid grid-cols-2">
             <TabsTrigger value="specification">Design Specification</TabsTrigger>
             <TabsTrigger value="data">Data</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="specification" className="flex-grow flex flex-col">
+          <TabsContent value="specification" className="flex-grow flex flex-col h-full">
             <Card className="flex flex-col h-full">
               <CardHeader className="pb-2">
                 <CardTitle>Design Specification</CardTitle>
@@ -616,18 +617,17 @@ const TranslationDashboard = () => {
                   </ToggleGroup>
                 </div>
               </CardHeader>
-              <CardContent className="flex-grow flex flex-col pb-6">
+              <CardContent className="flex-grow pb-6 flex flex-col">
                 <JsonEditor 
                   initialJson={activeEditorJSON} 
                   onJsonUpdate={handleSpecificationUpdate} 
-                  height="h-full"
-                  className="flex-grow" 
+                  className="flex-grow h-full" 
                 />
               </CardContent>
             </Card>
           </TabsContent>
           
-          <TabsContent value="data" className="flex-grow flex flex-col">
+          <TabsContent value="data" className="flex-grow flex flex-col h-full">
             <Card className="flex flex-col h-full">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
@@ -646,14 +646,15 @@ const TranslationDashboard = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="flex-grow overflow-y-auto pb-6">
+              <CardContent className="flex-grow pb-6 overflow-y-auto">
                 {showAdvancedDataEdit ? (
-                  <JsonEditor 
-                    initialJson={data} 
-                    onJsonUpdate={(json) => setData(json as OwnerData)}
-                    height="h-full"
-                    className="h-full" 
-                  />
+                  <div className="h-full flex flex-col">
+                    <JsonEditor 
+                      initialJson={data} 
+                      onJsonUpdate={(json) => setData(json as OwnerData)}
+                      className="h-full flex-grow" 
+                    />
+                  </div>
                 ) : (
                   <div className="h-full overflow-y-auto pr-2">
                     {renderDataEditor()}
@@ -664,7 +665,7 @@ const TranslationDashboard = () => {
           </TabsContent>
         </Tabs>
         
-        <div className="flex flex-col space-y-6">
+        <div className="flex flex-col h-full">
           <Card className="h-full flex flex-col">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
