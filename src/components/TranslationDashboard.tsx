@@ -516,7 +516,7 @@ const TranslationDashboard = () => {
         {Object.entries(dataStructure.arrays).map(([arrayName, arrayConfig]) => {
           const items = data[arrayName as keyof typeof data] as any[] || [];
           const arrayLabel = getLocalizedGroupLabel(arrayName);
-          const singularArrayName = arrayName.slice(0, -1);
+          const singularArrayName = arrayName.endsWith('s') ? arrayName.slice(0, -1) : arrayName;
           
           return (
             <div key={arrayName} className="space-y-4">
@@ -579,6 +579,13 @@ const TranslationDashboard = () => {
             </div>
           );
         })}
+        
+        {Object.keys(dataStructure.simple).length === 0 && 
+         Object.keys(dataStructure.arrays).length === 0 && (
+          <div className="text-center p-8 border border-dashed rounded-md text-muted-foreground">
+            No data structure detected. Please ensure your specification includes proper data source overlays.
+          </div>
+        )}
       </div>
     );
   };
