@@ -36,34 +36,20 @@ const JsonEditor = ({
     }
   };
   
-  // Format JSON with syntax highlighting
-  const formatJsonWithHighlighting = (json: string) => {
-    try {
-      // This is a simple syntax highlighter
-      return json
-        .replace(/"([^"]+)":/g, '<span class="text-blue-500">"$1"</span>:')
-        .replace(/: ("[^"]+")/g, ': <span class="text-green-500">$1</span>')
-        .replace(/: (true|false)/g, ': <span class="text-amber-500">$1</span>')
-        .replace(/: (\d+)/g, ': <span class="text-purple-500">$1</span>');
-    } catch (e) {
-      return json;
-    }
-  };
-  
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full space-y-4">
       {label && (
-        <div className="mb-2">
+        <div className="mb-2 flex-none">
           <h3 className="text-base font-medium">{label}</h3>
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
       )}
       <Textarea
-        className={`font-mono ${height} text-sm`}
+        className={`font-mono ${height} text-sm flex-1 min-h-[200px]`}
         value={jsonText}
         onChange={(e) => setJsonText(e.target.value)}
       />
-      <Button onClick={handleUpdate}>Update</Button>
+      <Button className="flex-none" onClick={handleUpdate}>Update</Button>
     </div>
   );
 };
