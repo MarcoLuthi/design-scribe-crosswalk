@@ -20,19 +20,23 @@ const JsonEditor = ({
   description
 }: JsonEditorProps) => {
   const [jsonText, setJsonText] = useState(JSON.stringify(initialJson, null, 2));
+  const [syntaxError, setSyntaxError] = useState<string | null>(null);
   
   // Update jsonText when initialJson changes
   useEffect(() => {
     setJsonText(JSON.stringify(initialJson, null, 2));
+    setSyntaxError(null);
   }, [initialJson]);
   
   const handleUpdate = () => {
     try {
       const parsedJson = JSON.parse(jsonText);
+      setSyntaxError(null);
       onJsonUpdate(parsedJson);
-      toast.success("JSON updated successfully");
     } catch (error) {
-      toast.error("Invalid JSON format");
+      const errorMessage = error instanceof Error ? error.message : "Invalid JSON format";
+      setSyntaxError(errorMessage);
+      toast.error(errorMessage);
     }
   };
   
@@ -45,10 +49,16 @@ const JsonEditor = ({
         </div>
       )}
       <Textarea
-        className={`font-mono ${height} text-sm`}
+        className={`font-mono ${height} text-sm ${syntaxError ? 'border-red-500' : ''}`}
         value={jsonText}
-        onChange={(e) => setJsonText(e.target.value)}
+        onChange={(e) => {
+          setJsonText(e.target.value);
+          setSyntaxError(null);
+        }}
       />
+      {syntaxError && (
+        <p className="text-sm text-red-500 mt-1">{syntaxError}</p>
+      )}
       <Button onClick={handleUpdate}>Update</Button>
     </div>
   );

@@ -107,3 +107,100 @@ export function formatPrimaryField(template: string, data: OwnerData): string {
     return match; // Return unmodified if not found
   });
 }
+
+export function validateSpecification(spec: any): { valid: boolean; error: string | null } {
+  // Check if capture_bases and overlays exist and are arrays
+  if (!spec.capture_bases || !Array.isArray(spec.capture_bases)) {
+    return { valid: false, error: "Missing or invalid 'capture_bases' array" };
+  }
+  
+  if (!spec.overlays || !Array.isArray(spec.overlays)) {
+    return { valid: false, error: "Missing or invalid 'overlays' array" };
+  }
+  
+  // Check each capture base
+  for (let i = 0; i < spec.capture_bases.length; i++) {
+    const base = spec.capture_bases[i];
+    
+    if (!base.type || typeof base.type !== 'string') {
+      return { valid: false, error: `Capture base at index ${i} is missing 'type' field` };
+    }
+    
+    if (!base.digest || typeof base.digest !== 'string') {
+      return { valid: false, error: `Capture base at index ${i} is missing 'digest' field` };
+    }
+    
+    if (!base.attributes || typeof base.attributes !== 'object') {
+      return { valid: false, error: `Capture base at index ${i} is missing 'attributes' object` };
+    }
+  }
+  
+  // Check for required overlay types
+  let hasBranding = false;
+  let hasMeta = false;
+  let hasDataSource = false;
+  
+  for (const overlay of spec.overlays) {
+    if (!overlay.type || typeof overlay.type !== 'string') {
+      return { valid: false, error: "Overlay missing 'type' field" };
+    }
+    
+    if (!overlay.capture_base || typeof overlay.capture_base !== 'string') {
+      return { valid: false, error: `Overlay of type '${overlay.type}' is missing 'capture_base' field` };
+    }
+    
+    // Check if the referenced capture_base exists
+    const baseExists = spec.capture_bases.some((base: any) => base.digest === overlay.capture_base);
+    if (!baseExists) {
+      return { valid: false, error: `Overlay references non-existent capture_base: '${overlay.capture_base}'` };
+    }
+    
+    // Track required overlay types
+    if (overlay.type === "aries/overlays/branding/1.1") {
+      hasBranding = true;
+    } else if (overlay.type === "spec/overlays/meta/1.0") {
+      hasMeta = true;
+    } else if (overlay.type === "extend/overlays/data_source/1.0") {
+      hasDataSource = true;
+    }
+    
+    // Specific validation for different overlay types
+    if (overlay.type === "extend/overlays/data_source/1.0") {
+      if (!overlay.format || typeof overlay.format !== 'string') {
+        return { valid: false, error: "Data source overlay missing 'format' field" };
+      }
+      if (!overlay.attribute_sources || typeof overlay.attribute_sources !== 'object') {
+        return { valid: false, error: "Data source overlay missing 'attribute_sources' object" };
+      }
+    } else if (overlay.type === "aries/overlays/branding/1.1") {
+      if (!overlay.language || typeof overlay.language !== 'string') {
+        return { valid: false, error: "Branding overlay missing 'language' field" };
+      }
+      if (!overlay.primary_background_color || typeof overlay.primary_background_color !== 'string') {
+        return { valid: false, error: "Branding overlay missing 'primary_background_color' field" };
+      }
+    } else if (overlay.type === "spec/overlays/meta/1.0") {
+      if (!overlay.language || typeof overlay.language !== 'string') {
+        return { valid: false, error: "Meta overlay missing 'language' field" };
+      }
+      if (!overlay.name || typeof overlay.name !== 'string') {
+        return { valid: false, error: "Meta overlay missing 'name' field" };
+      }
+    }
+  }
+  
+  // Check if required overlay types are present
+  if (!hasBranding) {
+    return { valid: false, error: "Required branding overlay (aries/overlays/branding/1.1) is missing" };
+  }
+  
+  if (!hasMeta) {
+    return { valid: false, error: "Required meta overlay (spec/overlays/meta/1.0) is missing" };
+  }
+  
+  if (!hasDataSource) {
+    return { valid: false, error: "Required data source overlay (extend/overlays/data_source/1.0) is missing" };
+  }
+  
+  return { valid: true, error: null };
+}

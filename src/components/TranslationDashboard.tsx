@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,8 @@ import {
   getDataSourceOverlays, 
   getAvailableLanguages,
   getAttributeLabel,
-  getLabelOverlays
+  getLabelOverlays,
+  validateSpecification
 } from "@/utils/design-parser";
 import { DesignSpecification, OwnerData, PetData } from "@/types/design-spec";
 import { ProcivisOneSchema } from "@/types/procivis-one-spec";
@@ -24,12 +26,13 @@ import {
 } from "@/utils/format-converter";
 import { Button } from "@/components/ui/button";
 import ProcivisOneCard from "./ProcivisOneCard";
-import { ArrowLeftRight, X, PlusCircle, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
+import { ArrowLeftRight, X, PlusCircle, ChevronDown, ChevronUp, Copy, Check, AlertTriangle } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type FormatType = "OCA" | "ProcivisOne";
 type LanguageOption = "en" | "de" | "fr" | "it";
@@ -51,6 +54,7 @@ const TranslationDashboard = () => {
   });
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>("en");
   const [isCopied, setIsCopied] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   
   const [convertedFormat, setConvertedFormat] = useState<FormatType | null>(null);
   const [convertedData, setConvertedData] = useState<OwnerData | null>(null);
@@ -253,19 +257,63 @@ const TranslationDashboard = () => {
     setConvertedJson(null);
     setConvertedFormat(null);
     setConvertedData(null);
+    setValidationError(null);
   };
   
   const handleSpecificationUpdate = (newSpec: object) => {
+    setValidationError(null);
+    
     if (formatType === "OCA") {
-      const typedSpec = newSpec as DesignSpecification;
-      setSpecification(typedSpec);
-      setActiveEditorJSON(typedSpec);
-      setProcivisSpec(convertOCAToProcivisOne(typedSpec));
+      try {
+        const typedSpec = newSpec as DesignSpecification;
+        
+        // Validate the specification structure
+        const validationResult = validateSpecification(typedSpec);
+        if (!validationResult.valid) {
+          setValidationError(validationResult.error);
+          toast({
+            variant: "destructive",
+            title: "Invalid specification",
+            description: validationResult.error
+          });
+          return;
+        }
+        
+        setSpecification(typedSpec);
+        setActiveEditorJSON(typedSpec);
+        setProcivisSpec(convertOCAToProcivisOne(typedSpec));
+        toast({
+          title: "Specification updated",
+          description: "OCA specification has been successfully updated."
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        setValidationError(errorMessage);
+        toast({
+          variant: "destructive",
+          title: "Error updating specification",
+          description: errorMessage
+        });
+      }
     } else {
-      const typedSpec = newSpec as ProcivisOneSchema;
-      setProcivisSpec(typedSpec);
-      setActiveEditorJSON(typedSpec);
-      setSpecification(convertProcivisOneToOCA(typedSpec));
+      try {
+        const typedSpec = newSpec as ProcivisOneSchema;
+        setProcivisSpec(typedSpec);
+        setActiveEditorJSON(typedSpec);
+        setSpecification(convertProcivisOneToOCA(typedSpec));
+        toast({
+          title: "Specification updated",
+          description: "Procivis One specification has been successfully updated."
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        setValidationError(errorMessage);
+        toast({
+          variant: "destructive",
+          title: "Error updating specification",
+          description: errorMessage
+        });
+      }
     }
     setConvertedJson(null);
     setConvertedFormat(null);
@@ -618,6 +666,13 @@ const TranslationDashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {validationError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Validation Error</AlertTitle>
+                    <AlertDescription>{validationError}</AlertDescription>
+                  </Alert>
+                )}
                 <JsonEditor 
                   initialJson={activeEditorJSON} 
                   onJsonUpdate={handleSpecificationUpdate} 
