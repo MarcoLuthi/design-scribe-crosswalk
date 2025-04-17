@@ -654,9 +654,9 @@ const TranslationDashboard = () => {
           <TabsContent value="specification">
             <Card>
               <CardHeader>
-                <CardTitle>Design Specification</CardTitle>
+                <CardTitle>Base Design Specification</CardTitle>
                 <CardDescription>
-                  Edit the JSON specification for your design
+                  Paste the schema you are trying to convert.
                 </CardDescription>
                 <div className="mt-4">
                   <ToggleGroup className="w-full" type="single" value={formatType} onValueChange={(value) => value && handleFormatToggle(value as FormatType)}>
@@ -688,7 +688,7 @@ const TranslationDashboard = () => {
                   <div>
                     <CardTitle>Data</CardTitle>
                     <CardDescription>
-                      Edit the data that will be displayed in your design
+                      Edit the attribute values that will be displayed in your design
                     </CardDescription>
                   </div>
                   <Button
